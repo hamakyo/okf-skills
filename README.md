@@ -36,6 +36,25 @@ Skills answer: "How should the agent do this kind of work?"
 
 `CLAUDE.md` is the Claude Code-facing instruction file. It mirrors the same repository rules, but is written for Claude Code users and workflows.
 
+## How The Pieces Fit
+
+```mermaid
+flowchart LR
+    Library["Reusable source library<br/>skills/"]
+    Codex["Codex project<br/>.agents/skills/"]
+    Claude["Claude Code project<br/>.claude/skills/"]
+    OKF["Project knowledge<br/>okf/"]
+    Agents["Codex guidance<br/>AGENTS.md"]
+    ClaudeMd["Claude Code guidance<br/>CLAUDE.md"]
+
+    Library --> Codex
+    Library --> Claude
+    OKF --> Codex
+    OKF --> Claude
+    Agents --> Codex
+    ClaudeMd --> Claude
+```
+
 ## Directory Structure
 
 ```text
@@ -51,7 +70,8 @@ Skills answer: "How should the agent do this kind of work?"
 │   ├── codex.md
 │   ├── claude-code.md
 │   ├── okf.md
-│   └── customization.md
+│   ├── customization.md
+│   └── usage-matrix.md
 ├── examples/
 │   ├── minimal/
 │   │   ├── AGENTS.md
@@ -196,6 +216,8 @@ See [docs/customization.md](docs/customization.md).
 - Improve coverage: use `add-test` with a target file, feature, or bug.
 - Clean up code: use `refactor-safely` and keep the diff small.
 - Refresh project knowledge: use `update-okf` after a meaningful implementation change.
+
+See [docs/usage-matrix.md](docs/usage-matrix.md) for a compact Codex, Claude Code, and generic template comparison.
 
 ## Contribution
 
