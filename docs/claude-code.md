@@ -6,7 +6,8 @@ Claude Code can use this repository as a lightweight operating manual for projec
 
 - [../CLAUDE.md](../CLAUDE.md): repository-level Claude Code instructions.
 - [../README.md](../README.md): public overview and common usage.
-- `skills/*/SKILL.md`: task-specific workflows.
+- `skills/*/SKILL.md`: reusable source library in this template repository.
+- `.claude/skills/*/SKILL.md`: Claude Code project Skills for auto-discovery after copying into your own repository.
 - `okf/index.md` and related OKF documents: project knowledge.
 
 ## Relationship Between CLAUDE.md and Skills
@@ -18,7 +19,7 @@ Claude Code can use this repository as a lightweight operating manual for projec
 - Update docs when usage changes.
 - Check OKF index and log before editing OKF.
 
-Skills are intentionally tool-neutral enough to be useful in both Codex and Claude Code. Claude-specific setup and usage notes belong in `CLAUDE.md`.
+Skills are intentionally tool-neutral enough to be useful in both Codex and Claude Code. Use top-level `skills/` as the source library and `.claude/skills/` inside a Claude Code project.
 
 ## Typical Claude Code Prompts
 
@@ -46,17 +47,17 @@ Follow existing test style and cover normal, error, and boundary cases where rel
 
 ## Recommended Repository Setup
 
-Copy the same files used for Codex:
+For Claude Code auto-discovery, use:
 
 ```text
 .
-├── AGENTS.md
 ├── CLAUDE.md
 ├── okf/
-└── skills/
+└── .claude/
+    └── skills/
 ```
 
-If your team only uses Claude Code, you can still keep `AGENTS.md` for portability, or remove it after updating README and docs to avoid broken links.
+See [../examples/claude-code-project/](../examples/claude-code-project/) for a minimal auto-discovery layout.
 
 ## Validation Expectations
 

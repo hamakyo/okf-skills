@@ -6,7 +6,8 @@ Codex can use this repository as a set of local instructions, reusable Skills, a
 
 - [../AGENTS.md](../AGENTS.md): repository-level Codex instructions.
 - [../README.md](../README.md): public overview and common usage.
-- `skills/*/SKILL.md`: task-specific workflows.
+- `skills/*/SKILL.md`: reusable source library in this template repository.
+- `.agents/skills/*/SKILL.md`: Codex project Skills for auto-discovery after copying into your own repository.
 - `okf/index.md` and related OKF documents: project knowledge.
 
 ## Relationship Between AGENTS.md and Skills
@@ -18,14 +19,14 @@ Codex can use this repository as a set of local instructions, reusable Skills, a
 - Check OKF index and log before OKF edits.
 - Keep diffs small and validation explicit.
 
-Skills provide narrower workflows. For example, `implement-feature` tells Codex how to approach feature work, while `update-okf` tells Codex how to reflect implementation changes back into OKF.
+Skills provide narrower workflows. For example, `implement-feature` tells Codex how to approach feature work, while `update-okf` tells Codex how to reflect implementation changes back into OKF. Use top-level `skills/` as the source library and `.agents/skills/` inside a Codex project.
 
 ## Typical Codex Prompts
 
 Feature work:
 
 ```text
-Use skills/implement-feature.
+Use the implement-feature skill.
 Read AGENTS.md, README.md, docs/okf.md, and relevant OKF files first.
 Implement account deletion with the smallest reasonable diff.
 Run available tests and update OKF if behavior changes.
@@ -34,7 +35,7 @@ Run available tests and update OKF if behavior changes.
 Bug investigation:
 
 ```text
-Use skills/investigate-bug.
+Use the investigate-bug skill.
 Do not fix immediately.
 First reproduce the issue, identify likely causes, describe impact, and propose the smallest fix.
 ```
@@ -42,7 +43,7 @@ First reproduce the issue, identify likely causes, describe impact, and propose 
 OKF update:
 
 ```text
-Use skills/update-okf.
+Use the update-okf skill.
 Inspect git diff and update OKF only for durable behavior, architecture, domain, data, or playbook changes.
 ```
 
@@ -55,10 +56,13 @@ In your project repository:
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── okf/
-└── skills/
+└── .agents/
+    └── skills/
 ```
 
-Keep Codex-specific instructions in `AGENTS.md`. Keep reusable workflows in Skills. Keep durable facts in OKF.
+Keep Codex-specific instructions in `AGENTS.md`. Put Codex-discovered project Skills under `.agents/skills/`. Keep durable facts in OKF.
+
+See [../examples/codex-project/](../examples/codex-project/) for a minimal auto-discovery layout.
 
 ## Validation Expectations
 

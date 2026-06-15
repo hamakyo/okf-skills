@@ -53,11 +53,15 @@ Skills answer: "How should the agent do this kind of work?"
 │   ├── okf.md
 │   └── customization.md
 ├── examples/
-│   └── minimal/
-│       ├── AGENTS.md
-│       ├── CLAUDE.md
-│       ├── okf/
-│       └── skills/
+│   ├── minimal/
+│   │   ├── AGENTS.md
+│   │   ├── CLAUDE.md
+│   │   ├── okf/
+│   │   └── skills/
+│   ├── codex-project/
+│   │   └── .agents/skills/
+│   └── claude-code-project/
+│       └── .claude/skills/
 ├── okf/
 │   ├── index.md
 │   ├── log.md
@@ -79,7 +83,7 @@ Skills answer: "How should the agent do this kind of work?"
 1. Copy the minimal template into your project:
 
    ```sh
-   cp -R examples/minimal/* /path/to/your-repo/
+   cp -R examples/minimal/. /path/to/your-repo/
    ```
 
 2. Edit `/path/to/your-repo/okf/index.md` to describe your project.
@@ -97,20 +101,22 @@ For a slower walkthrough, see [Getting Started](docs/getting-started.md).
 
 ## Using With Codex
 
-Codex should read [AGENTS.md](AGENTS.md) for repository-level instructions. When a task matches one of the Skills in `skills/`, ask Codex to use that Skill explicitly or rely on the Skill description if your environment supports automatic Skill selection.
+Codex should read [AGENTS.md](AGENTS.md) for repository-level instructions. The top-level `skills/` directory is the canonical reusable source library in this repo. In a Codex project, place auto-discovered project Skills under `.agents/skills/`.
 
 Typical request:
 
 ```text
-Use skills/implement-feature to add a CSV export button.
+Use the implement-feature skill to add a CSV export button.
 Read README.md, docs/codex.md, and relevant OKF files before editing.
 ```
+
+See `examples/codex-project/` for the Codex auto-discovery layout.
 
 See [docs/codex.md](docs/codex.md) for setup and usage details.
 
 ## Using With Claude Code
 
-Claude Code should read [CLAUDE.md](CLAUDE.md) for repository-level instructions. Keep Claude-specific guidance in `CLAUDE.md` and workflow details in `skills/*/SKILL.md`.
+Claude Code should read [CLAUDE.md](CLAUDE.md) for repository-level instructions. The top-level `skills/` directory is the canonical reusable source library in this repo. In a Claude Code project, place auto-discovered project Skills under `.claude/skills/`.
 
 Typical request:
 
@@ -118,6 +124,8 @@ Typical request:
 Use the investigate-bug skill.
 Reproduce the issue first, summarize likely causes, then propose the smallest fix.
 ```
+
+See `examples/claude-code-project/` for the Claude Code auto-discovery layout.
 
 See [docs/claude-code.md](docs/claude-code.md) for setup and usage details.
 
@@ -164,12 +172,12 @@ See [docs/okf.md](docs/okf.md).
 
 ## Add This To Your Own Repo
 
-1. Copy `AGENTS.md`, `CLAUDE.md`, `okf/`, and `skills/` into your repository.
-2. Remove Skills you do not want to support.
+1. Copy `AGENTS.md`, `CLAUDE.md`, and `okf/` into your repository.
+2. Copy selected Skills from top-level `skills/` into `.agents/skills/` for Codex or `.claude/skills/` for Claude Code.
 3. Rewrite `okf/index.md` for your project.
 4. Add project-specific knowledge under the OKF directories.
 5. Update `AGENTS.md` and `CLAUDE.md` with your test commands, coding conventions, and release rules.
-6. Keep `skills/*/SKILL.md` generic enough to reuse, and keep project facts in OKF.
+6. Keep reusable Skill source files generic enough to reuse, and keep project facts in OKF.
 
 ## Customization Examples
 

@@ -42,6 +42,8 @@ Create:
 skills/<skill-name>/SKILL.md
 ```
 
+The top-level `skills/` directory is the reusable source library. In an actual project, copy selected Skills under `.agents/skills/` for Codex or `.claude/skills/` for Claude Code.
+
 Use this structure:
 
 ```md
@@ -106,7 +108,8 @@ okf/playbooks/release.md
 Add a project-specific testing Skill:
 
 ```text
-skills/test-database-migration/SKILL.md
+.agents/skills/test-database-migration/SKILL.md
+.claude/skills/test-database-migration/SKILL.md
 ```
 
 Add architecture knowledge:

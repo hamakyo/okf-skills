@@ -7,14 +7,17 @@ This guide shows how to copy the template into another repository and make the f
 From this repository:
 
 ```sh
-cp -R examples/minimal/* /path/to/your-repo/
+cp -R examples/minimal/. /path/to/your-repo/
 ```
 
-For a fuller setup, copy these directories and files instead:
+The minimal example is portable and keeps Skills under `skills/`. After copying it, you can also copy a tool-specific auto-discovery layout:
 
 ```sh
-cp -R AGENTS.md CLAUDE.md okf skills /path/to/your-repo/
+cp -R examples/codex-project/. /path/to/your-repo/
+cp -R examples/claude-code-project/. /path/to/your-repo/
 ```
+
+The top-level `skills/` directory in this repository is the reusable source library. In an actual project, place selected Skills under `.agents/skills/` for Codex or `.claude/skills/` for Claude Code.
 
 ## 2. Describe Your Project
 
