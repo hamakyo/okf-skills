@@ -6,7 +6,7 @@ Codex can use this repository as a set of local instructions, reusable Skills, a
 
 - [../AGENTS.md](../AGENTS.md): repository-level Codex instructions.
 - [../README.md](../README.md): public overview and common usage.
-- `skills/*/SKILL.md`: reusable source library in this template repository.
+- `skills/*/SKILL.md`: canonical reusable source library in this repository.
 - `.agents/skills/*/SKILL.md`: Codex project Skills for auto-discovery after copying into your own repository.
 - `okf/index.md` and related OKF documents: project knowledge.
 
@@ -19,7 +19,7 @@ Codex can use this repository as a set of local instructions, reusable Skills, a
 - Check OKF index and log before OKF edits.
 - Keep diffs small and validation explicit.
 
-Skills provide narrower workflows. For example, `implement-feature` tells Codex how to approach feature work, while `update-okf` tells Codex how to reflect implementation changes back into OKF. Use top-level `skills/` as the source library and `.agents/skills/` inside a Codex project.
+Skills provide narrower workflows. For example, `implement-feature` tells Codex how to approach feature work, while `update-okf` tells Codex how to reflect implementation changes back into OKF. Use top-level `skills/` as the canonical source library and `.agents/skills/` inside a Codex project.
 
 ## Typical Codex Prompts
 
