@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OKF Skills - はじめての人向けガイド</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.7;
+    }
+
+    body {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 48px 20px 80px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      font-size: clamp(2rem, 7vw, 3.5rem);
+    }
+
+    h2 {
+      margin-top: 48px;
+    }
+
+    .lead {
+      font-size: 1.15rem;
+    }
+
+    .box {
+      border: 1px solid currentColor;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+
+    .flow {
+      display: grid;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .flow div {
+      border: 1px solid currentColor;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .arrow {
+      border: 0 !important;
+      padding: 0 !important;
+      font-size: 1.4rem;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    }
+
+    footer {
+      margin-top: 64px;
+      text-align: center;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>OKF Skills</h1>
+    <p class="lead">AIコーディングエージェントに、<br>「プロジェクトの知識」と「仕事のやり方」を渡すためのテンプレート集です。</p>
+  </header>
+
+  <main>
+    <h2>そもそも OKF って何？</h2>
+    <p>
+      <strong>OKF（Open Knowledge Format）</strong>は、プロジェクトについてAIに覚えておいてほしい情報を、
+      Markdownで整理して置いておくための形式です。
+    </p>
+
+    <div class="box">
+      <strong>たとえば：</strong>
+      <ul>
+        <li>このシステムはどういう構成なのか</li>
+        <li>どんな機能があるのか</li>
+        <li>データはどういう形なのか</li>
+        <li>開発時に守るルールは何か</li>
+      </ul>
+      <p>つまり、<strong>AI向けの「プロジェクトの共有ノート」</strong>みたいなものです。</p>
+    </div>
+
+    <h2>Skill は何？</h2>
+    <p>
+      <strong>Skill</strong>は、AIに「どう作業してほしいか」を伝える手順書です。
+    </p>
+
+    <div class="box">
+      <strong>このリポジトリには、たとえばこんな Skill があります。</strong>
+      <ul>
+        <li><code>implement-feature</code> — 機能を追加するとき</li>
+        <li><code>investigate-bug</code> — バグを調べるとき</li>
+        <li><code>add-test</code> — テストを追加するとき</li>
+        <li><code>refactor-safely</code> — 挙動を変えずに整理するとき</li>
+        <li><code>update-okf</code> — 変更後にOKFを更新するとき</li>
+      </ul>
+    </div>
+
+    <h2>OKF と Skill の違い</h2>
+
+    <div class="flow">
+      <div><strong>OKF</strong><br>「このプロジェクトでは何が正しい？」</div>
+      <div class="arrow">＋</div>
+      <div><strong>Skill</strong><br>「この作業はどう進める？」</div>
+      <div class="arrow">↓</div>
+      <div><strong>Codex / Claude Code</strong><br>プロジェクトを理解したうえで作業する</div>
+    </div>
+
+    <p>
+      この2つを分けることで、巨大なプロンプトを毎回書かなくても、
+      AIが必要な知識と手順を再利用しやすくなります。
+    </p>
+
+    <h2>このリポジトリは何をしてくれる？</h2>
+    <p>
+      <strong>okf-skills</strong> は、OKFとSkillを自分のリポジトリへ導入しやすくするためのスターターキットです。
+    </p>
+
+    <ul>
+      <li>OKFのひな形</li>
+      <li>よく使う開発Skill</li>
+      <li>Codex向けの <code>AGENTS.md</code></li>
+      <li>Claude Code向けの <code>CLAUDE.md</code></li>
+      <li>そのまま参考にできるサンプル構成</li>
+    </ul>
+
+    <h2>使い方はシンプル</h2>
+    <ol>
+      <li>必要なファイルを自分のリポジトリへコピーする</li>
+      <li><code>okf/</code> に自分のプロジェクト情報を書く</li>
+      <li>CodexやClaude CodeにSkillを使って作業させる</li>
+      <li>仕様が変わったらOKFも更新する</li>
+    </ol>
+
+    <div class="box">
+      <strong>一言でいうと：</strong>
+      <p>
+        OKF Skills は、<strong>AIに毎回ゼロから説明しなくていい開発環境</strong>を作るためのテンプレートです。
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <a href="https://github.com/hamakyo/okf-skills">GitHub: hamakyo/okf-skills</a>
+  </footer>
+</body>
+</html>
