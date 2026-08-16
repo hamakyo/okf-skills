@@ -1,8 +1,10 @@
-# OKF Skills
+<h1 align="center">OKF Skills</h1>
 
-[![Markdown](https://github.com/hamakyo/okf-skills/actions/workflows/markdown.yml/badge.svg)](https://github.com/hamakyo/okf-skills/actions/workflows/markdown.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Latest Release](https://img.shields.io/github/v/release/hamakyo/okf-skills)](https://github.com/hamakyo/okf-skills/releases/latest)
+<p align="center">
+  <a href="https://github.com/hamakyo/okf-skills/actions/workflows/markdown.yml"><img src="https://github.com/hamakyo/okf-skills/actions/workflows/markdown.yml/badge.svg" alt="Markdown"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+  <a href="https://github.com/hamakyo/okf-skills/releases/latest"><img src="https://img.shields.io/github/v/release/hamakyo/okf-skills" alt="Latest Release"></a>
+</p>
 
 Reusable Skills and Open Knowledge Format (OKF) templates for Codex, Claude Code, and agent-assisted software projects.
 
