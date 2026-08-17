@@ -6,6 +6,10 @@
   <a href="https://github.com/hamakyo/okf-skills/releases/latest"><img src="https://img.shields.io/github/v/release/hamakyo/okf-skills" alt="Latest Release"></a>
 </p>
 
+<p align="center">
+  English | <a href="README.ja.md">日本語</a>
+</p>
+
 Reusable Skills and Open Knowledge Format (OKF) templates for Codex, Claude Code, and agent-assisted software projects.
 
 ## What This Solves
