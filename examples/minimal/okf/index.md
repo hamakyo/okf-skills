@@ -1,3 +1,7 @@
+---
+okf_version: "0.2"
+---
+
 # Project Knowledge
 
 Use this OKF bundle to store durable project knowledge.

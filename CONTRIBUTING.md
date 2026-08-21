@@ -23,6 +23,9 @@ Thank you for improving OKF Skills. This repository is intended to stay small, p
    - OKF stores project knowledge.
    - Skills store repeatable working procedures.
 2. If you change a Skill, update related docs when behavior or usage changes.
+   - Keep `skills/` as the canonical source.
+   - Follow the upstream Agent Skills metadata constraints and this repository's Skill authoring profile.
+   - Run `python scripts/sync_examples.py` when a copied Skill changes.
 3. If you change OKF structure, update `okf/index.md`, `docs/okf.md`, and examples if needed.
 4. Keep Markdown readable in plain text.
 5. Prefer relative links inside the repository.
@@ -35,3 +38,14 @@ Thank you for improving OKF Skills. This repository is intended to stay small, p
 - [ ] New OKF concept documents include YAML frontmatter with `type`.
 - [ ] No secrets, credentials, private URLs, or personal data were added.
 - [ ] The change summary explains how the update was verified.
+
+Run before opening a pull request:
+
+```sh
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests
+python scripts/validate_markdown.py
+python scripts/validate_okf.py
+python scripts/validate_skills.py
+python scripts/sync_examples.py --check
+```

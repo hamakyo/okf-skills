@@ -35,9 +35,10 @@ Before editing, read:
 - `README.md`
 - `AGENTS.md` or `CLAUDE.md`, depending on the tool in use
 - `okf/index.md`
-- `okf/log.md`
 - Relevant OKF documents under `okf/architecture/`, `okf/domain/`, `okf/data/`, `okf/features/`, or `okf/playbooks/`
 - Existing code and tests around the target behavior
+
+Read `okf/log.md` only when change history is relevant to the requested behavior.
 
 ## Workflow
 

@@ -1,3 +1,7 @@
+---
+okf_version: "0.2"
+---
+
 # OKF Skills Knowledge Bundle
 
 This OKF bundle describes the reusable knowledge for this template repository.
@@ -25,3 +29,4 @@ This OKF bundle describes the reusable knowledge for this template repository.
 ## External Reference
 
 - [Open Knowledge Format SPEC](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
+- [Software Project Profile](../docs/okf-software-project-profile.md) - Repository-specific OKF conventions for software projects.

@@ -10,13 +10,13 @@
   <a href="README.md">English</a> | 日本語
 </p>
 
-Codex、Claude Code、その他のエージェント支援型ソフトウェア開発で再利用できる Skills と Open Knowledge Format（OKF）のテンプレート集です。
+Codex、Claude Code、その他のエージェント支援型ソフトウェア開発で再利用できる Skills と、OKF v0.2に基づくソフトウェアプロジェクト向けプロファイルです。
 
 ## このリポジトリが解決すること
 
 AIコーディングエージェントは、プロジェクト固有の知識と明確な作業手順の両方を与えることで、より安定して動作します。しかし多くのリポジトリでは、それらが場当たり的なプロンプト、古くなったWiki、長大な指示文などに混在し、保守しづらくなりがちです。
 
-このリポジトリは、小さく持ち運びやすいスターターキットを提供します。
+このリポジトリは、小さく持ち運びやすいリファレンスプロファイルを提供します。
 
 - 人間とエージェントの双方が読めるプロジェクト知識用のOKFテンプレート
 - 機能実装、バグ調査、テスト、リファクタリング、OKF更新などの反復可能な開発ワークフロー用Skills
@@ -28,13 +28,13 @@ AIコーディングエージェントは、プロジェクト固有の知識と
 
 ### OKF
 
-OKF（Open Knowledge Format）は、プロジェクトの知識レイヤーです。このリポジトリでは、必要に応じて軽量なYAML frontmatterを持つMarkdownファイル群として扱います。アーキテクチャ、ドメイン概念、データ構造、機能、プレイブック、更新履歴などを記録します。
+OKF（Open Knowledge Format）は、プロジェクトの知識レイヤーです。このリポジトリはOKF v0.2を対象とし、アーキテクチャ、ドメイン、データ、機能、プレイブックを整理するためのソフトウェアプロジェクト向けプロファイルを追加します。これらのディレクトリ分類は、OKF本体の必須要件ではありません。
 
 OKFが答える問いは、**「このプロジェクトについて何が正しいか？」** です。
 
 ### Skill
 
-Skillは、エージェントが読める作業ワークフローです。各Skillには `SKILL.md` があり、利用条件、必要なコンテキスト、手順、ガードレール、完了チェックリストなどを記述します。
+Skillは、エージェントが読める作業ワークフローです。各SkillはupstreamのAgent Skills形式に従います。さらに、このリポジトリの正本Skillには、利用条件、必要なコンテキスト、手順、ガードレール、完了チェックリストを揃える独自のauthoring profileを適用します。
 
 Skillが答える問いは、**「この種類の作業をどう進めるか？」** です。
 
@@ -81,6 +81,7 @@ flowchart LR
 │   ├── codex.md
 │   ├── claude-code.md
 │   ├── okf.md
+│   ├── okf-software-project-profile.md
 │   ├── customization.md
 │   └── usage-matrix.md
 ├── examples/
@@ -108,6 +109,8 @@ flowchart LR
     ├── refactor-safely/
     └── update-okf/
 ```
+
+検証・同期ツールは `scripts/`、Skillのrouting fixtureは `evals/` に配置します。
 
 ## クイックスタート
 
@@ -175,10 +178,11 @@ Claude Codeの自動検出レイアウトは `examples/claude-code-project/` を
 OKFには、タスクごとの指示ではなく、長く使えるプロジェクト知識を書きます。有用なOKFドキュメントには、通常次のような情報を含めます。
 
 - 少なくとも `type` を持つYAML frontmatter
-- 明確な `title` と `description`
+- 必要に応じた `title` と `description`
 - 必要に応じた関連OKFドキュメントへのリンク
 - エージェントが推測せずに済む具体的な情報
 - 外部資料に基づく内容であれば、引用元やソースへのリンク
+- 値が分かる場合に限った、v0.2のprovenance、trust、lifecycle metadata
 
 例：
 
@@ -199,7 +203,7 @@ The export includes the same rows currently visible after filters are applied.
 - Reporting overview: `okf/domain/reporting.md`
 ```
 
-詳しくは [docs/okf.md](docs/okf.md) を参照してください。
+upstreamのモデルは [OKF v0.2](docs/okf.md)、このリポジトリ独自の規約は [Software Project Profile](docs/okf-software-project-profile.md) を参照してください。
 
 ## 自分のリポジトリに追加する
 
@@ -240,6 +244,17 @@ Pull Requestを作成する前に：
 - Skillsとドキュメントの内容を同期する
 - README、`AGENTS.md`、`CLAUDE.md` からのリンクを確認する
 - シークレット、認証情報、非公開URL、個人情報を含めない
+
+決定的なリポジトリ検証を実行します。
+
+```sh
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests
+python scripts/validate_markdown.py
+python scripts/validate_okf.py
+python scripts/validate_skills.py
+python scripts/sync_examples.py --check
+```
 
 ## ライセンス
 

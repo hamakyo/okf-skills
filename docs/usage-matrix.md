@@ -12,3 +12,5 @@ Use this matrix to choose the right template layout.
 ## Rule Of Thumb
 
 Keep reusable Skills in the top-level `skills/` directory of this repository. Copy selected Skills into the tool-specific project directory only when you want that tool to auto-discover them.
+
+Example copies in this repository are declared in `examples/skill-copies.yaml`. Run `python scripts/sync_examples.py` after changing a canonical Skill and use `--check` in validation workflows.

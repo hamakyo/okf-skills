@@ -10,13 +10,13 @@
   English | <a href="README.ja.md">日本語</a>
 </p>
 
-Reusable Skills and Open Knowledge Format (OKF) templates for Codex, Claude Code, and agent-assisted software projects.
+Reusable Skills and an opinionated OKF v0.2 software-project profile for Codex, Claude Code, and agent-assisted software projects.
 
 ## What This Solves
 
 Agent coding tools work best when they have both project knowledge and clear working procedures. Most repositories mix those concerns into ad hoc prompts, stale wiki pages, or long instructions that are hard to maintain.
 
-This repository provides a small, portable starter kit:
+This repository provides a small, portable reference profile:
 
 - OKF templates for project knowledge that humans and agents can read.
 - Skills for repeatable engineering workflows such as feature work, bug investigation, tests, refactoring, and OKF updates.
@@ -28,13 +28,13 @@ This repository provides a small, portable starter kit:
 
 ### OKF
 
-OKF, or Open Knowledge Format, is the project knowledge layer. In this repo, OKF means a directory of Markdown files with lightweight YAML frontmatter where useful. It captures architecture, domain concepts, data structures, features, playbooks, and update history.
+OKF, or Open Knowledge Format, is the project knowledge layer. This repository targets OKF v0.2 and adds an opinionated software-project profile for architecture, domain, data, feature, and playbook knowledge. The directory categories are profile conventions, not OKF core requirements.
 
 OKF answers: "What is true about this project?"
 
 ### Skill
 
-A Skill is an agent-readable workflow. Each Skill has a `SKILL.md` file with trigger conditions, required context, steps, guardrails, and a completion checklist.
+A Skill is an agent-readable workflow. Each portable Skill follows the upstream Agent Skills format. Canonical Skills in this repository additionally use a consistent authoring profile with trigger conditions, required context, steps, guardrails, and a completion checklist.
 
 Skills answer: "How should the agent do this kind of work?"
 
@@ -80,6 +80,7 @@ flowchart LR
 │   ├── codex.md
 │   ├── claude-code.md
 │   ├── okf.md
+│   ├── okf-software-project-profile.md
 │   ├── customization.md
 │   └── usage-matrix.md
 ├── examples/
@@ -107,6 +108,8 @@ flowchart LR
     ├── refactor-safely/
     └── update-okf/
 ```
+
+Validation and synchronization tools live under `scripts/`, and Skill routing fixtures live under `evals/`.
 
 ## Quick Start
 
@@ -174,10 +177,11 @@ See [docs/claude-code.md](docs/claude-code.md) for setup and usage details.
 Use OKF for stable project knowledge, not task instructions. A useful OKF document should usually include:
 
 - YAML frontmatter with at least `type`.
-- A clear `title` and `description`.
+- Optional `title` and `description` when they improve discovery.
 - Links to related OKF documents when relevant.
 - Concrete details that help an agent avoid guessing.
 - Citations or source links for claims that came from external material.
+- Optional v0.2 provenance, trust, and lifecycle metadata only when the values are known.
 
 Example:
 
@@ -198,7 +202,7 @@ The export includes the same rows currently visible after filters are applied.
 - Reporting overview: `okf/domain/reporting.md`
 ```
 
-See [docs/okf.md](docs/okf.md).
+See [OKF v0.2](docs/okf.md) for the upstream model and the [Software Project Profile](docs/okf-software-project-profile.md) for this repository's additional conventions.
 
 ## Add This To Your Own Repo
 
@@ -239,6 +243,17 @@ Before opening a pull request:
 - Keep Skills and docs synchronized.
 - Verify links from README, `AGENTS.md`, and `CLAUDE.md`.
 - Avoid secrets, credentials, private URLs, and personal data.
+
+Run the deterministic repository checks:
+
+```sh
+python -m pip install -r requirements-dev.txt
+python -m unittest discover -s tests
+python scripts/validate_markdown.py
+python scripts/validate_okf.py
+python scripts/validate_skills.py
+python scripts/sync_examples.py --check
+```
 
 ## License
 

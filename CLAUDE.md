@@ -30,7 +30,9 @@ Use this repository as a copyable starter kit for:
 - OKF is the project knowledge layer.
 - Store architecture, domain concepts, data notes, feature behavior, and playbooks under `okf/`.
 - Keep `okf/index.md` useful as the map of the knowledge bundle.
+- Use `okf/index.md` as a router and load only the concepts relevant to the task.
 - Keep `okf/log.md` updated when meaningful knowledge changes are made.
+- Read `okf/log.md` when history is relevant or before editing OKF, not for every task.
 
 ## Documentation Update Rules
 

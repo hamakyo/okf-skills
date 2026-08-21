@@ -23,6 +23,8 @@ okf/playbooks/release.md
 
 Remove categories you do not use.
 
+The category layout is the repository's [Software Project Profile](okf-software-project-profile.md), not a core OKF requirement. Keep `okf_version: "0.2"` in the bundle-root index and keep non-reserved concept documents conformant with [OKF v0.2](okf.md).
+
 ## Customizing Skills
 
 Skills should remain workflow-focused. Good additions:
@@ -44,7 +46,7 @@ skills/<skill-name>/SKILL.md
 
 The top-level `skills/` directory is the reusable source library. In an actual project, copy selected Skills under `.agents/skills/` for Codex or `.claude/skills/` for Claude Code.
 
-Use this structure:
+The upstream Agent Skills standard requires a `SKILL.md` file with valid `name` and `description` metadata. Canonical Skills in this repository additionally use this authoring profile:
 
 ```md
 ---
@@ -74,6 +76,8 @@ Then update:
 - [../README.md](../README.md) Skill catalog.
 - Relevant docs under `docs/`.
 - Examples if the new Skill changes recommended setup.
+
+Add the Skill to `examples/skill-copies.yaml` only when it should appear in an example layout, then run `python scripts/sync_examples.py`.
 
 ## Customizing AGENTS.md
 

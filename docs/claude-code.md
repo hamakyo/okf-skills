@@ -8,7 +8,7 @@ Claude Code can use this repository as a lightweight operating manual for projec
 - [../README.md](../README.md): public overview and common usage.
 - `skills/*/SKILL.md`: canonical reusable source library in this repository.
 - `.claude/skills/*/SKILL.md`: Claude Code project Skills for auto-discovery after copying into your own repository.
-- `okf/index.md` and related OKF documents: project knowledge.
+- `okf/index.md` as the bundle router, followed by only the related OKF documents needed for the task.
 
 ## Relationship Between CLAUDE.md and Skills
 
@@ -20,6 +20,8 @@ Claude Code can use this repository as a lightweight operating manual for projec
 - Check OKF index and log before editing OKF.
 
 Skills are intentionally tool-neutral enough to be useful in both Codex and Claude Code. Use top-level `skills/` as the canonical source library and `.claude/skills/` inside a Claude Code project.
+
+Read `okf/log.md` when change history matters or when editing OKF; routine feature work should not load it automatically.
 
 ## Typical Claude Code Prompts
 

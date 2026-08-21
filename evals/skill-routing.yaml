@@ -1,0 +1,56 @@
+cases:
+  - id: implement-feature-positive
+    category: positive
+    prompt: Add CSV export support to the reports page.
+    expect: implement-feature
+    reject: [investigate-bug, add-test, refactor-safely, update-okf]
+  - id: investigate-bug-positive
+    category: positive
+    prompt: Find out why login fails only in production before changing code.
+    expect: investigate-bug
+    reject: [implement-feature, add-test, refactor-safely, update-okf]
+  - id: add-test-positive
+    category: positive
+    prompt: Add boundary-value tests for the existing parser behavior.
+    expect: add-test
+    reject: [implement-feature, investigate-bug, refactor-safely, update-okf]
+  - id: refactor-safely-positive
+    category: positive
+    prompt: Remove duplication from this module without changing behavior.
+    expect: refactor-safely
+    reject: [implement-feature, investigate-bug, add-test, update-okf]
+  - id: update-okf-positive
+    category: positive
+    prompt: Update project knowledge after the merged schema and workflow changes.
+    expect: update-okf
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely]
+  - id: bug-versus-feature
+    category: overlap
+    prompt: Users report an unexplained checkout regression; reproduce it and identify the cause first.
+    expect: investigate-bug
+    reject: [implement-feature]
+  - id: behavior-change-versus-refactor
+    category: overlap
+    prompt: Change the parser output format to include source locations.
+    expect: implement-feature
+    reject: [refactor-safely]
+  - id: tests-versus-bug-fix
+    category: overlap
+    prompt: Add regression coverage for the already-corrected null-input behavior without changing production code.
+    expect: add-test
+    reject: [investigate-bug, implement-feature]
+  - id: refactor-versus-feature
+    category: overlap
+    prompt: Extract helpers while preserving every public API and serialized value.
+    expect: refactor-safely
+    reject: [implement-feature]
+  - id: knowledge-versus-doc-copyedit
+    category: overlap
+    prompt: Record the durable architecture boundary introduced by the completed implementation.
+    expect: update-okf
+    reject: [implement-feature]
+  - id: general-documentation-negative
+    category: negative
+    prompt: Fix spelling and punctuation in README without changing instructions or project knowledge.
+    expect: null
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely, update-okf]

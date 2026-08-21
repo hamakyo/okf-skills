@@ -28,6 +28,14 @@ Open `okf/index.md` in your target repository and replace the placeholder text w
 - The most important architecture, domain, data, feature, and playbook documents.
 - Links to existing docs if they are public or safe to share with agents.
 
+Keep the root frontmatter declaration:
+
+```yaml
+---
+okf_version: "0.2"
+---
+```
+
 ## 3. Add One Useful OKF Document
 
 Start with one document that prevents common mistakes. Good first choices:
@@ -47,6 +55,8 @@ description: Describes the main runtime components and ownership boundaries.
 tags: [architecture]
 ---
 ```
+
+Only `type` is universally required. Add optional provenance, verification, status, or freshness metadata when the values are known. See [OKF v0.2](okf.md) and the [Software Project Profile](okf-software-project-profile.md).
 
 ## 4. Choose a Skill
 
