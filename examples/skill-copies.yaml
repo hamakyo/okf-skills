@@ -1,0 +1,7 @@
+targets:
+  - directory: examples/minimal/skills
+    skills: [implement-feature, update-okf]
+  - directory: examples/codex-project/.agents/skills
+    skills: [implement-feature, update-okf]
+  - directory: examples/claude-code-project/.claude/skills
+    skills: [implement-feature, update-okf]

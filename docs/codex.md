@@ -8,7 +8,7 @@ Codex can use this repository as a set of local instructions, reusable Skills, a
 - [../README.md](../README.md): public overview and common usage.
 - `skills/*/SKILL.md`: canonical reusable source library in this repository.
 - `.agents/skills/*/SKILL.md`: Codex project Skills for auto-discovery after copying into your own repository.
-- `okf/index.md` and related OKF documents: project knowledge.
+- `okf/index.md` as the bundle router, followed by only the related OKF documents needed for the task.
 
 ## Relationship Between AGENTS.md and Skills
 
@@ -61,6 +61,8 @@ In your project repository:
 ```
 
 Keep Codex-specific instructions in `AGENTS.md`. Put Codex-discovered project Skills under `.agents/skills/`. Keep durable facts in OKF.
+
+Read `okf/log.md` when change history matters or when editing OKF; routine feature work should not load it automatically.
 
 See [../examples/codex-project/](../examples/codex-project/) for a minimal auto-discovery layout.
 

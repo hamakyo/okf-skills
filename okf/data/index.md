@@ -1,3 +1,3 @@
 # Data
 
-- [Skill Markdown Format](skill-markdown-format.md) - Documents the structure expected for `SKILL.md` files.
+- [Skill Authoring Profile](skill-markdown-format.md) - Separates the upstream Agent Skills format from this repository's stricter authoring profile.

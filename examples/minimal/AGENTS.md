@@ -5,7 +5,7 @@ This repository uses OKF for project knowledge and Skills for repeatable workflo
 ## Before Work
 
 - Read `README.md` if present.
-- Read `okf/index.md` before implementation work.
+- Read `okf/index.md` as the bundle router, then load only relevant concepts.
 - Read the relevant `skills/*/SKILL.md` before using a Skill.
 - If editing OKF, also read `okf/log.md`.
 

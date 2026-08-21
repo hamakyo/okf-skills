@@ -4,7 +4,7 @@ This repository uses OKF as the project knowledge layer and Skills as task workf
 
 ## Usage
 
-- Read `okf/index.md` before feature work.
+- Read `okf/index.md` as the bundle router, then load only relevant concepts.
 - Use `skills/implement-feature/SKILL.md` for behavior changes.
 - Use `skills/update-okf/SKILL.md` after changes that affect durable project knowledge.
 
