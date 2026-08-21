@@ -31,6 +31,8 @@ class ValidateOkfTests(unittest.TestCase):
                     "type: Feature",
                     "sources:",
                     "  - resource: ../requirements.md",
+                    "    last_modified: 2026-05-30T00:00:00Z",
+                    "usage_window: { from: 2026-06-01T00:00:00Z, to: 2026-06-30T00:00:00Z }",
                     "generated: { by: tool/1.0, at: 2026-08-21T09:00:00Z }",
                     "verified: { by: human:reviewer, at: 2026-08-21T10:00:00Z }",
                     "status: stable",
@@ -54,6 +56,35 @@ class ValidateOkfTests(unittest.TestCase):
         errors, _count = validate_bundle(bundle)
         self.assertTrue(any("generated.at is required" in error for error in errors))
         self.assertTrue(any("stale_after must be" in error for error in errors))
+
+    def test_rejects_date_only_timestamp_fields(self) -> None:
+        bundle = self.make_bundle(
+            "\n".join(
+                [
+                    "type: Feature",
+                    "sources:",
+                    "  - resource: ../requirements.md",
+                    "    last_modified: 2026-05-30",
+                    "usage_window: { from: 2026-06-01, to: 2026-06-30 }",
+                    "stale_after: 2026-12-31",
+                ]
+            )
+        )
+        errors, _count = validate_bundle(bundle)
+        self.assertTrue(any("sources[0].last_modified must be" in error for error in errors))
+        self.assertTrue(any("usage_window.from must be" in error for error in errors))
+        self.assertTrue(any("usage_window.to must be" in error for error in errors))
+        self.assertTrue(any("stale_after must be" in error for error in errors))
+
+    def test_rejects_offsetless_trust_timestamps_as_upstream_errors(self) -> None:
+        bundle = self.make_bundle(
+            "type: Feature\n"
+            "generated: { by: tool/1.0, at: '2026-08-21T09:00:00' }\n"
+            "verified: { by: human:reviewer, at: '2026-08-21T10:00:00' }"
+        )
+        errors, _count = validate_bundle(bundle)
+        self.assertTrue(any("[OKF v0.2] generated.at must be" in error for error in errors))
+        self.assertTrue(any("[OKF v0.2] verified[0].at must be" in error for error in errors))
 
     def test_rejects_invalid_log_heading(self) -> None:
         bundle = self.make_bundle("type: Feature")

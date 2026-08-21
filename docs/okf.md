@@ -79,7 +79,11 @@ sources:
   - id: account-policy
     resource: ../references/account-policy.md
     title: Account policy
+    last_modified: 2026-05-30T00:00:00Z
+usage_window: { from: 2026-06-01T00:00:00Z, to: 2026-06-30T00:00:00Z }
 ```
+
+OKF v0.2 defines timestamp-valued fields, including `last_modified` and `usage_window` endpoints, as ISO 8601 datetimes with an explicit UTC offset.
 
 ### `generated`
 
@@ -109,7 +113,7 @@ Use `status: draft` for incomplete or unreviewed knowledge and `status: deprecat
 
 ### `stale_after`
 
-Use `stale_after` only when a concept has a known absolute validity horizon. Do not invent a generic time-to-live.
+Use `stale_after` only when a concept has a known absolute expiry instant. It is an offset-aware datetime, not a date or relative time-to-live.
 
 ```yaml
 stale_after: 2026-12-31T00:00:00Z
