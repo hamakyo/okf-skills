@@ -233,6 +233,32 @@ See [docs/customization.md](docs/customization.md).
 
 See [docs/usage-matrix.md](docs/usage-matrix.md) for a compact Codex, Claude Code, and generic template comparison.
 
+## Roadmap
+
+The next stage of OKF Skills is to move from a reusable template library toward a verifiable reference implementation for agent-assisted software maintenance. The roadmap emphasizes reliability, reproducible evaluation, and interoperability rather than adding a large number of narrowly scoped Skills.
+
+### Now — Reliability
+
+- Expand positive, negative, and ambiguous Skill routing fixtures and define measurable selection accuracy ([#5](https://github.com/hamakyo/okf-skills/issues/5)).
+- Continue deterministic validation and synchronization checks for Skills, OKF documents, and examples.
+- Improve Codex-facing examples and document expected behavior and failure modes.
+
+### Next — Evaluation
+
+- Build an automated evaluation harness for Codex-facing Skills ([#4](https://github.com/hamakyo/okf-skills/issues/4)).
+- Add reproducible end-to-end regression scenarios for common software-maintenance workflows ([#6](https://github.com/hamakyo/okf-skills/issues/6)).
+- Separate deterministic repository checks from model-backed evaluations so failures remain diagnosable.
+
+### Later — Interoperability
+
+- Evaluate adapters and plugin-style packaging without replacing the portable copy-based workflow ([#3](https://github.com/hamakyo/okf-skills/issues/3)).
+- Define compatibility tests for additional agentic coding environments.
+- Improve versioning and migration guidance as the OKF software-project profile evolves.
+
+### Toward v1.0
+
+A future v1.0 should provide stable Skill conventions, reproducible evaluation coverage, a stable OKF software-project profile, documented compatibility guarantees, and clear migration rules.
+
 ## Contribution
 
 Contributions should improve reuse, clarity, or correctness without turning this repository into a project-specific prompt dump.
