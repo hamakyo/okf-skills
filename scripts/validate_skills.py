@@ -17,6 +17,11 @@ except ImportError:  # pragma: no cover - used when imported as scripts.validate
 ROOT = Path(__file__).resolve().parents[1]
 ROUTING_FIXTURE = ROOT / "evals" / "skill-routing.yaml"
 NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+ROUTING_SCHEMA_VERSION = 1
+ROUTING_TOP_KEYS = {"schema_version", "cases"}
+ROUTING_CASE_KEYS = {"id", "category", "prompt", "expect", "reject", "rationale"}
+ROUTING_CATEGORIES = {"positive", "negative", "overlap", "ambiguous"}
+BOUNDARY_CATEGORIES = {"overlap", "ambiguous"}
 PROFILE_SECTIONS = [
     "## When to use",
     "## Inputs",
@@ -103,41 +108,106 @@ def validate_routing_fixture(path: Path, skill_names: set[str]) -> list[str]:
         return [f"{rel}: [Skill routing fixture] requires a cases list"]
 
     errors: list[str] = []
+    unknown_top = set(data) - ROUTING_TOP_KEYS
+    if unknown_top:
+        errors.append(f"{rel}: [Skill routing fixture] unknown top-level keys {sorted(unknown_top)}")
+    if "schema_version" in data:
+        version = data["schema_version"]
+        if isinstance(version, bool) or version != ROUTING_SCHEMA_VERSION:
+            errors.append(
+                f"{rel}: [Skill routing fixture] schema_version must equal {ROUTING_SCHEMA_VERSION}"
+            )
+
     seen_ids: set[str] = set()
+    seen_prompts: set[str] = set()
     positive: set[str] = set()
     rejected: set[str] = set()
+    boundary_covered: set[str] = set()
+    negative_count = 0
     overlap_count = 0
+
     for index, case in enumerate(data["cases"]):
         prefix = f"cases[{index}]"
         if not isinstance(case, dict):
             errors.append(f"{rel}: [Skill routing fixture] {prefix} must be a mapping")
             continue
+
+        unknown_keys = set(case) - ROUTING_CASE_KEYS
+        if unknown_keys:
+            errors.append(f"{rel}: [Skill routing fixture] {prefix} has unknown keys {sorted(unknown_keys)}")
+
         case_id = case.get("id")
         if not non_empty_string(case_id):
             errors.append(f"{rel}: [Skill routing fixture] {prefix}.id is required")
+        elif not NAME_RE.fullmatch(case_id):
+            errors.append(
+                f"{rel}: [Skill routing fixture] {prefix}.id must use lowercase letters, numbers, and single hyphens"
+            )
         elif case_id in seen_ids:
             errors.append(f"{rel}: [Skill routing fixture] duplicate id {case_id!r}")
         else:
             seen_ids.add(case_id)
+
         category = case.get("category")
-        if not isinstance(category, str) or category not in {"positive", "negative", "overlap"}:
+        if not isinstance(category, str) or category not in ROUTING_CATEGORIES:
             errors.append(f"{rel}: [Skill routing fixture] {prefix}.category is invalid")
-        if category == "overlap":
+        if category == "negative":
+            negative_count += 1
+        if category in BOUNDARY_CATEGORIES:
             overlap_count += 1
-        if not non_empty_string(case.get("prompt")):
+
+        prompt = case.get("prompt")
+        if not non_empty_string(prompt):
             errors.append(f"{rel}: [Skill routing fixture] {prefix}.prompt is required")
+        else:
+            normalized_prompt = " ".join(prompt.split()).lower()
+            if normalized_prompt in seen_prompts:
+                errors.append(f"{rel}: [Skill routing fixture] {prefix}.prompt duplicates another case prompt")
+            else:
+                seen_prompts.add(normalized_prompt)
+
+        if "rationale" in case and not non_empty_string(case["rationale"]):
+            errors.append(f"{rel}: [Skill routing fixture] {prefix}.rationale must be a non-empty string")
+
+        has_expect = "expect" in case
         expected = case.get("expect")
-        if expected is not None and (not isinstance(expected, str) or expected not in skill_names):
+        if not has_expect:
+            errors.append(f"{rel}: [Skill routing fixture] {prefix}.expect is required")
+        elif expected is not None and (not isinstance(expected, str) or expected not in skill_names):
             errors.append(f"{rel}: [Skill routing fixture] {prefix}.expect references unknown Skill {expected!r}")
-        elif category == "positive" and expected is not None:
-            positive.add(expected)
+        else:
+            if category == "positive":
+                if expected is None:
+                    errors.append(f"{rel}: [Skill routing fixture] {prefix}.expect must name a Skill for positive cases")
+                else:
+                    positive.add(expected)
+            elif category == "negative" and expected is not None:
+                errors.append(f"{rel}: [Skill routing fixture] {prefix}.expect must be null for negative cases")
+            elif category in BOUNDARY_CATEGORIES:
+                if expected is None:
+                    errors.append(
+                        f"{rel}: [Skill routing fixture] {prefix}.expect must name a Skill for {category} cases"
+                    )
+                else:
+                    boundary_covered.add(expected)
+
         reject = case.get("reject")
         if not isinstance(reject, list) or any(not isinstance(item, str) or item not in skill_names for item in reject):
             errors.append(f"{rel}: [Skill routing fixture] {prefix}.reject must list known Skills")
         else:
+            if len(set(reject)) != len(reject):
+                errors.append(f"{rel}: [Skill routing fixture] {prefix}.reject must not contain duplicates")
             rejected.update(reject)
-            if expected in reject:
+            if expected is not None and expected in reject:
                 errors.append(f"{rel}: [Skill routing fixture] {prefix} cannot expect and reject the same Skill")
+            if category == "negative" and not reject:
+                errors.append(f"{rel}: [Skill routing fixture] {prefix}.reject must be non-empty for negative cases")
+            if category in BOUNDARY_CATEGORIES:
+                if not reject:
+                    errors.append(
+                        f"{rel}: [Skill routing fixture] {prefix}.reject must list at least one competing Skill for {category} cases"
+                    )
+                boundary_covered.update(reject)
 
     missing_positive = skill_names - positive
     if missing_positive:
@@ -145,8 +215,16 @@ def validate_routing_fixture(path: Path, skill_names: set[str]) -> list[str]:
     missing_negative = skill_names - rejected
     if missing_negative:
         errors.append(f"{rel}: [Skill routing fixture] missing negative coverage for {sorted(missing_negative)}")
+    if negative_count < 1:
+        errors.append(f"{rel}: [Skill routing fixture] requires at least one negative case with expect: null")
     if overlap_count < 2:
-        errors.append(f"{rel}: [Skill routing fixture] requires at least two overlap cases")
+        errors.append(f"{rel}: [Skill routing fixture] requires at least two overlap/ambiguous cases")
+    if len(skill_names) >= 2:
+        missing_boundary = skill_names - boundary_covered
+        if missing_boundary:
+            errors.append(
+                f"{rel}: [Skill routing fixture] missing overlap/ambiguous coverage for {sorted(missing_boundary)}"
+            )
     return errors
 
 
