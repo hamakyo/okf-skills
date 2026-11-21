@@ -4,7 +4,7 @@ This repository is an opinionated software-project profile built on OKF v0.2. Th
 
 ## Relationship To OKF v0.2
 
-The upstream [OKF v0.2 specification](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md) allows producers to organize concepts for their own domain. The directory categories in this repository are profile conventions, not OKF core requirements.
+The upstream [OKF v0.2 specification](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md) allows producers to organize concepts for their own domain. The directory categories in this repository are profile conventions, not OKF core requirements.
 
 Profile rules may be stricter than upstream conformance. Validation output should identify whether a failure comes from the upstream format or this repository profile.
 
@@ -62,8 +62,13 @@ Read `okf/log.md` when change history is relevant or when editing OKF. Do not re
 - Use `status` only when `draft` or `deprecated` conveys useful lifecycle information; omission means `stable`.
 - Use `stale_after` only when an absolute expiry is known.
 - Reject legacy `timestamp` in v0.2 concept documents maintained by this repository.
+- Accept `tool/version`, `human:<id>`, `process:<id>`, and `team:<id>` for actor fields (`sources[].author`, `generated.by`, `verified[].by`) so upstream v0.2 examples validate cleanly.
 
 Do not bulk-fill optional metadata with guesses. Missing optional signals are better than fabricated provenance or trust.
+
+## Out Of Scope
+
+- **Attested Computations (OKF v0.2 §10)**: This profile focuses on durable software-project documentation rather than attested computational artifacts (`computations/`, `# Computation`, `runtime`, `parameters`, `executor`, `attester`) or `references/` layouts. Unknown metadata fields are preserved and left unrejected per OKF v0.2 consumer rules.
 
 ## Repository Quality Rules
 

@@ -4,7 +4,7 @@ OKF is the project knowledge layer. Skills are the work procedures. Keeping thos
 
 ## Upstream Standard
 
-This repository targets [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md). An OKF bundle is a directory tree of Markdown files. `index.md` and `log.md` are reserved filenames; every other Markdown file is a concept document with YAML frontmatter.
+This repository targets [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md). An OKF bundle is a directory tree of Markdown files. `index.md` and `log.md` are reserved filenames; every other Markdown file is a concept document with YAML frontmatter.
 
 The upstream standard is intentionally minimal:
 
@@ -87,7 +87,7 @@ OKF v0.2 defines timestamp-valued fields, including `last_modified` and `usage_w
 
 ### `generated`
 
-Use `generated` to identify who or what produced the current content. `generated.by` follows the OKF actor convention, and `generated.at` records the last meaningful content change with an explicit UTC offset.
+Use `generated` to identify who or what produced the current content. `generated.by` follows the OKF actor convention (`tool/version`, `human:<id>`, `process:<id>`, or `team:<id>` as used in upstream v0.2 examples), and `generated.at` records the last meaningful content change with an explicit UTC offset.
 
 ```yaml
 generated:
@@ -118,6 +118,10 @@ Use `stale_after` only when a concept has a known absolute expiry instant. It is
 ```yaml
 stale_after: 2026-12-31T00:00:00Z
 ```
+
+### Attested Computations (Out Of Scope For This Profile)
+
+OKF v0.2 (§10) also defines Attested Computation concepts (`# Computation`, `computations/`, `references/`, and metadata fields such as `runtime`, `parameters`, `executor`, and `attester`). This software-project template does not scaffold or enforce Attested Computation contracts; following OKF v0.2 forward-compatibility rules, `scripts/validate_okf.py` tolerates unknown metadata keys so bundles that include computation metadata remain valid.
 
 ## Linking
 

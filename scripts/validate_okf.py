@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_BUNDLES = [ROOT / "okf", ROOT / "examples" / "minimal" / "okf"]
 RESERVED = {"index.md", "log.md"}
 DATE_HEADING_RE = re.compile(r"^## (\d{4}-\d{2}-\d{2})$")
-ACTOR_RE = re.compile(r"^(?:human:[^\s:]+|process:[^\s:]+|[^\s/]+/[^\s/]+)$")
+ACTOR_RE = re.compile(r"^(?:human:[^\s:]+|process:[^\s:]+|team:[^\s:]+|[^\s/]+/[^\s/]+)$")
 STATUS_VALUES = {"draft", "stable", "deprecated"}
 
 
@@ -32,7 +32,7 @@ def label(path: Path, bundle: Path) -> str:
 
 def validate_actor(value: Any, field: str, rel: str) -> list[str]:
     if not non_empty_string(value) or not ACTOR_RE.fullmatch(value):
-        return [f"{rel}: [OKF v0.2] {field} must use tool/version, human:<id>, or process:<id>"]
+        return [f"{rel}: [OKF v0.2] {field} must use tool/version, human:<id>, process:<id>, or team:<id>"]
     return []
 
 

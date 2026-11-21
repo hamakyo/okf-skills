@@ -180,7 +180,7 @@ Use OKF for stable project knowledge, not task instructions. A useful OKF docume
 - Optional `title` and `description` when they improve discovery.
 - Links to related OKF documents when relevant.
 - Concrete details that help an agent avoid guessing.
-- Citations or source links for claims that came from external material.
+- Frontmatter `sources` entries (and optional Markdown footnotes keyed by `id`) for claims that came from external material.
 - Optional v0.2 provenance, trust, and lifecycle metadata only when the values are known.
 
 Example:
