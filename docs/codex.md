@@ -74,3 +74,15 @@ Ask Codex to include validation in the final response:
 - Files inspected when no automated tests exist.
 - Any checks that could not be run.
 - Remaining human review items.
+
+## Automated Skill Evaluation
+
+Use the reproducible evaluation harness in [../evals/README.md](../evals/README.md) to check how Codex executes each core Skill against isolated git workspaces and observable pass/fail assertions:
+
+```sh
+python scripts/eval_codex_skills.py --mode validate
+python scripts/eval_codex_skills.py --mode dry-run
+python scripts/eval_codex_skills.py --mode codex --format markdown --output .eval-results/codex-eval.md
+```
+
+Keep `.eval-results/` uncommitted and rely on `--mode validate` (plus the repository validators) for offline deterministic CI checks.

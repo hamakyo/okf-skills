@@ -279,6 +279,7 @@ python scripts/validate_markdown.py
 python scripts/validate_okf.py
 python scripts/validate_skills.py
 python scripts/sync_examples.py --check
+python scripts/eval_codex_skills.py --mode validate
 ```
 
 ## License
