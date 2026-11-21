@@ -28,5 +28,5 @@ This OKF bundle describes the reusable knowledge for this template repository.
 
 ## External Reference
 
-- [Open Knowledge Format SPEC](https://github.com/GoogleCloudPlatform/knowledge-catalog/blob/main/okf/SPEC.md)
+- [Open Knowledge Format SPEC](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)
 - [Software Project Profile](../docs/okf-software-project-profile.md) - Repository-specific OKF conventions for software projects.

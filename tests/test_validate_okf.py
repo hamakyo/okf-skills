@@ -103,6 +103,50 @@ class ValidateOkfTests(unittest.TestCase):
         errors, _count = validate_bundle(bundle)
         self.assertTrue(any("root index.md is required" in error for error in errors))
 
+    def test_accepts_team_actor(self) -> None:
+        bundle = self.make_bundle(
+            "\n".join(
+                [
+                    "type: Feature",
+                    "sources:",
+                    "  - resource: ../requirements.md",
+                    "    author: team:ga4-docs",
+                    "generated: { by: team:platform-eng, at: 2026-08-21T09:00:00Z }",
+                    "verified: { by: team:finance-fpa, at: 2026-08-21T10:00:00Z }",
+                ]
+            )
+        )
+        errors, _count = validate_bundle(bundle)
+        self.assertEqual([], errors)
+
+    def test_rejects_invalid_actor(self) -> None:
+        bundle = self.make_bundle(
+            "type: Feature\n"
+            "generated: { by: 'team:', at: 2026-08-21T09:00:00Z }\n"
+            "verified: { by: unknown-actor, at: 2026-08-21T10:00:00Z }"
+        )
+        errors, _count = validate_bundle(bundle)
+        self.assertTrue(any("generated.by must use" in error for error in errors))
+        self.assertTrue(any("verified[0].by must use" in error for error in errors))
+
+    def test_tolerates_attested_computation_fields(self) -> None:
+        bundle = self.make_bundle(
+            "\n".join(
+                [
+                    "type: Computation",
+                    "runtime: python/3.13",
+                    "parameters:",
+                    "  window_days: 30",
+                    "executor:",
+                    "  resource: https://example.com/runner",
+                    "attester:",
+                    "  resource: https://example.com/attester",
+                ]
+            )
+        )
+        errors, _count = validate_bundle(bundle)
+        self.assertEqual([], errors)
+
 
 if __name__ == "__main__":
     unittest.main()
