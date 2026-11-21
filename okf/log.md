@@ -2,6 +2,7 @@
 
 ## 2026-11-22
 
+- **Update**: Documented adapter and plugin packaging tradeoffs in `docs/packaging.md` and added deterministically synced optional host adapters (`adapters/codex/` and `adapters/claude-code/`) via `scripts/sync_adapters.py` while preserving copy-based installation as primary.
 - **Update**: Added `evals/fixtures/maintenance-app/` fixture repository, `evals/regression-scenarios.yaml`, unintended-change scope checks (`allowed_changed_paths`), and diagnostic failure categories (`routing`, `context`, `execution`, `documentation`).
 - **Update**: Added Codex Skill evaluation harness (`evals/codex-scenarios.yaml` and `scripts/eval_codex_skills.py`) with observable assertions for all five canonical Skills and documented `evals/` and `scripts/` boundaries in OKF.
 - **Update**: Pointed upstream OKF v0.2 specification links to `GoogleCloudPlatform/open-knowledge-format`.

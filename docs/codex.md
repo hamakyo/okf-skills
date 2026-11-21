@@ -64,7 +64,7 @@ Keep Codex-specific instructions in `AGENTS.md`. Put Codex-discovered project Sk
 
 Read `okf/log.md` when change history matters or when editing OKF; routine feature work should not load it automatically.
 
-See [../examples/codex-project/](../examples/codex-project/) for a minimal auto-discovery layout.
+See [../examples/codex-project/](../examples/codex-project/) for a minimal auto-discovery layout, or [packaging.md](packaging.md) for the optional generated Codex adapter (`adapters/codex/`) with `agents/openai.yaml` metadata and `.codex-plugin/plugin.json`.
 
 ## Validation Expectations
 
