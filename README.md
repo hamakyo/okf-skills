@@ -231,7 +231,7 @@ See [docs/customization.md](docs/customization.md).
 - Clean up code: use `refactor-safely` and keep the diff small.
 - Refresh project knowledge: use `update-okf` after a meaningful implementation change.
 
-See [docs/usage-matrix.md](docs/usage-matrix.md) for a compact Codex, Claude Code, and generic template comparison.
+See [docs/usage-matrix.md](docs/usage-matrix.md) for a compact Codex, Claude Code, and generic template comparison, and [docs/packaging.md](docs/packaging.md) for optional generated host adapters and plugin packaging tradeoffs.
 
 ## Roadmap
 
@@ -279,6 +279,7 @@ python scripts/validate_markdown.py
 python scripts/validate_okf.py
 python scripts/validate_skills.py
 python scripts/sync_examples.py --check
+python scripts/sync_adapters.py --check
 python scripts/eval_codex_skills.py --mode validate
 python scripts/eval_codex_skills.py --scenarios evals/regression-scenarios.yaml --mode validate
 ```

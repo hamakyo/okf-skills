@@ -1,0 +1,50 @@
+schema_version: 1
+plugin:
+  name: okf-skills
+  version: "0.2.0"
+  description: >-
+    Reusable software-maintenance Skills designed to pair with Open Knowledge
+    Format (OKF v0.2) project knowledge.
+  license: MIT
+  repository: "https://github.com/hamakyo/okf-skills"
+adapters:
+  codex:
+    directory: adapters/codex
+    manifest_path: .codex-plugin/plugin.json
+    skills_dir: skills
+    skills:
+      implement-feature:
+        display_name: "Implement Feature"
+        short_description: "Implement a scoped feature or behavior change with tests and OKF updates."
+        default_prompt: "Use $implement-feature to implement the requested behavior change with a small diff, focused tests, and OKF updates."
+        allow_implicit_invocation: true
+      investigate-bug:
+        display_name: "Investigate Bug"
+        short_description: "Reproduce a defect, isolate root cause and impact, and propose the smallest fix."
+        default_prompt: "Use $investigate-bug to reproduce the failure, identify root cause and impact, and propose the smallest fix before editing."
+        allow_implicit_invocation: true
+      add-test:
+        display_name: "Add Test"
+        short_description: "Add focused tests for existing behavior without changing production code."
+        default_prompt: "Use $add-test to add focused normal, boundary, and error-path tests without changing production behavior."
+        allow_implicit_invocation: true
+      refactor-safely:
+        display_name: "Refactor Safely"
+        short_description: "Improve internal structure while preserving public APIs, schemas, and behavior."
+        default_prompt: "Use $refactor-safely to improve internal structure with a small diff while preserving public behavior."
+        allow_implicit_invocation: true
+      update-okf:
+        display_name: "Update OKF"
+        short_description: "Synchronize durable project knowledge and okf/log.md from implementation diffs."
+        default_prompt: "Use $update-okf to inspect git diff and update relevant OKF documents and okf/log.md."
+        allow_implicit_invocation: true
+  claude_code:
+    directory: adapters/claude-code
+    manifest_path: .claude-plugin/plugin.json
+    skills_dir: skills
+    skills:
+      - implement-feature
+      - investigate-bug
+      - add-test
+      - refactor-safely
+      - update-okf

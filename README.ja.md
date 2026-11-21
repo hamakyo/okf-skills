@@ -232,7 +232,7 @@ upstreamのモデルは [OKF v0.2](docs/okf.md)、このリポジトリ独自の
 - コードを整理する：`refactor-safely` を使い、差分を小さく保つ
 - プロジェクト知識を更新する：意味のある実装変更後に `update-okf`
 
-Codex、Claude Code、汎用テンプレートの比較は [docs/usage-matrix.md](docs/usage-matrix.md) を参照してください。
+Codex、Claude Code、汎用テンプレートの比較は [docs/usage-matrix.md](docs/usage-matrix.md) を、任意の生成アダプターやプラグインパッケージングの判断は [docs/packaging.md](docs/packaging.md) を参照してください。
 
 ## コントリビューション
 
@@ -254,6 +254,7 @@ python scripts/validate_markdown.py
 python scripts/validate_okf.py
 python scripts/validate_skills.py
 python scripts/sync_examples.py --check
+python scripts/sync_adapters.py --check
 python scripts/eval_codex_skills.py --mode validate
 python scripts/eval_codex_skills.py --scenarios evals/regression-scenarios.yaml --mode validate
 ```

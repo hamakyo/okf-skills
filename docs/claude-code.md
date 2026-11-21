@@ -59,7 +59,7 @@ For Claude Code auto-discovery, use:
     └── skills/
 ```
 
-See [../examples/claude-code-project/](../examples/claude-code-project/) for a minimal auto-discovery layout.
+See [../examples/claude-code-project/](../examples/claude-code-project/) for a minimal auto-discovery layout, or [packaging.md](packaging.md) to load all five canonical Skills in one command via `claude --plugin-dir ./adapters/claude-code`.
 
 ## Validation Expectations
 
