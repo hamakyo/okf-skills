@@ -255,6 +255,7 @@ python scripts/validate_okf.py
 python scripts/validate_skills.py
 python scripts/sync_examples.py --check
 python scripts/eval_codex_skills.py --mode validate
+python scripts/eval_codex_skills.py --scenarios evals/regression-scenarios.yaml --mode validate
 ```
 
 ## ライセンス

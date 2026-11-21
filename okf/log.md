@@ -2,6 +2,7 @@
 
 ## 2026-11-22
 
+- **Update**: Added `evals/fixtures/maintenance-app/` fixture repository, `evals/regression-scenarios.yaml`, unintended-change scope checks (`allowed_changed_paths`), and diagnostic failure categories (`routing`, `context`, `execution`, `documentation`).
 - **Update**: Added Codex Skill evaluation harness (`evals/codex-scenarios.yaml` and `scripts/eval_codex_skills.py`) with observable assertions for all five canonical Skills and documented `evals/` and `scripts/` boundaries in OKF.
 - **Update**: Pointed upstream OKF v0.2 specification links to `GoogleCloudPlatform/open-knowledge-format`.
 - **Update**: Documented OKF v0.2 §10 Attested Computations as out of scope for the software-project profile while preserving unknown metadata keys.

@@ -49,6 +49,7 @@ ASSERTION_KEYS = {
     "files_must_not_exist",
     "files_must_change",
     "files_must_not_change",
+    "allowed_changed_paths",
     "max_changed_files",
     "forbidden_paths",
     "file_contains",
@@ -57,9 +58,10 @@ ASSERTION_KEYS = {
     "response_contains",
     "response_not_contains",
 }
-FILE_MATCH_KEYS = {"path", "pattern", "literal", "name"}
-RESPONSE_MATCH_KEYS = {"pattern", "literal", "name"}
-COMMAND_CHECK_KEYS = {"name", "cmd", "expect_exit_code", "stdout_contains", "stderr_contains"}
+DIAGNOSTIC_CATEGORIES = {"routing", "context", "execution", "documentation"}
+FILE_MATCH_KEYS = {"path", "pattern", "literal", "name", "category"}
+RESPONSE_MATCH_KEYS = {"pattern", "literal", "name", "category"}
+COMMAND_CHECK_KEYS = {"name", "cmd", "expect_exit_code", "stdout_contains", "stderr_contains", "category"}
 
 IGNORED_SNAPSHOT_DIRS = {".git", "__pycache__"}
 IGNORED_SNAPSHOT_FILES = {".DS_Store"}
@@ -180,6 +182,8 @@ def _validate_file_match_list(value: Any, label: str) -> list[str]:
             errors.extend(_validate_regex(pattern, f"{prefix}.pattern"))
         if "name" in entry and not non_empty_string(entry["name"]):
             errors.append(f"{prefix}.name must be a non-empty string")
+        if "category" in entry and entry["category"] not in DIAGNOSTIC_CATEGORIES:
+            errors.append(f"{prefix}.category must be one of {sorted(DIAGNOSTIC_CATEGORIES)}")
     return errors
 
 
@@ -206,6 +210,8 @@ def _validate_response_match_list(value: Any, label: str) -> list[str]:
             errors.extend(_validate_regex(pattern, f"{prefix}.pattern"))
         if "name" in entry and not non_empty_string(entry["name"]):
             errors.append(f"{prefix}.name must be a non-empty string")
+        if "category" in entry and entry["category"] not in DIAGNOSTIC_CATEGORIES:
+            errors.append(f"{prefix}.category must be one of {sorted(DIAGNOSTIC_CATEGORIES)}")
     return errors
 
 
@@ -233,6 +239,8 @@ def _validate_command_checks(value: Any, label: str) -> list[str]:
         for stream_key in ("stdout_contains", "stderr_contains"):
             if stream_key in entry:
                 errors.extend(_validate_regex(entry[stream_key], f"{prefix}.{stream_key}"))
+        if "category" in entry and entry["category"] not in DIAGNOSTIC_CATEGORIES:
+            errors.append(f"{prefix}.category must be one of {sorted(DIAGNOSTIC_CATEGORIES)}")
     return errors
 
 
@@ -336,6 +344,23 @@ def validate_scenarios_data(
                     errors.append(f"{prefix}.workspace.fixture must be a safe relative POSIX path")
                 elif not (root / fixture).is_dir():
                     errors.append(f"{prefix}.workspace.fixture directory does not exist: {fixture}")
+                else:
+                    fixture_dir = root / fixture
+                    for dirpath, dirnames, filenames in os.walk(fixture_dir):
+                        dirnames[:] = sorted(d for d in dirnames if d not in IGNORED_SNAPSHOT_DIRS)
+                        for filename in sorted(filenames):
+                            if filename in IGNORED_SNAPSHOT_FILES or filename.endswith(".pyc"):
+                                continue
+                            candidate = Path(dirpath) / filename
+                            try:
+                                raw_content = candidate.read_text(encoding="utf-8")
+                            except (OSError, UnicodeDecodeError):
+                                continue
+                            for secret_kind in detect_secrets(raw_content):
+                                rel_fixture_file = candidate.relative_to(fixture_dir).as_posix()
+                                errors.append(
+                                    f"{prefix}.workspace.fixture[{rel_fixture_file!r}] appears to contain a secret ({secret_kind})"
+                                )
 
             copy_skills = workspace.get("copy_skills")
             if not isinstance(copy_skills, list) or not copy_skills:
@@ -390,14 +415,15 @@ def validate_scenarios_data(
                 if path_list_key in assertions:
                     errors.extend(_validate_string_path_list(assertions[path_list_key], f"{prefix}.assertions.{path_list_key}"))
 
-            if "forbidden_paths" in assertions:
-                errors.extend(
-                    _validate_string_path_list(
-                        assertions["forbidden_paths"],
-                        f"{prefix}.assertions.forbidden_paths",
-                        allow_glob=True,
+            for glob_key in ("forbidden_paths", "allowed_changed_paths"):
+                if glob_key in assertions:
+                    errors.extend(
+                        _validate_string_path_list(
+                            assertions[glob_key],
+                            f"{prefix}.assertions.{glob_key}",
+                            allow_glob=True,
+                        )
                     )
-                )
 
             if "max_changed_files" in assertions:
                 limit = assertions["max_changed_files"]
@@ -550,6 +576,19 @@ def _matches(text: str, pattern: str, *, literal: bool = False) -> bool:
     return re.search(pattern, text) is not None
 
 
+def _is_doc_path(rel_path: str) -> bool:
+    name = Path(rel_path).name
+    return (
+        rel_path.startswith("okf/")
+        or rel_path.startswith("docs/")
+        or name in {"README.md", "README.ja.md", "CHANGELOG.md"}
+    )
+
+
+def _matches_path_pattern(rel_path: str, pattern: str) -> bool:
+    return fnmatch.fnmatch(rel_path, pattern) or fnmatch.fnmatch(Path(rel_path).name, pattern)
+
+
 def evaluate_assertions(
     assertions: dict[str, Any],
     *,
@@ -569,6 +608,7 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "file_exists",
+                "category": "documentation" if _is_doc_path(rel) else "execution",
                 "name": rel,
                 "passed": exists,
                 "detail": "exists" if exists else f"expected file {rel!r} does not exist",
@@ -580,6 +620,7 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "file_not_exists",
+                "category": "context",
                 "name": rel,
                 "passed": not exists,
                 "detail": "absent" if not exists else f"unexpected file {rel!r} exists",
@@ -591,6 +632,7 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "file_changed",
+                "category": "documentation" if _is_doc_path(rel) else "execution",
                 "name": rel,
                 "passed": ok,
                 "detail": "modified or added" if ok else f"expected {rel!r} to be modified or added",
@@ -602,9 +644,30 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "file_unchanged",
+                "category": "context",
                 "name": rel,
                 "passed": ok,
                 "detail": "unchanged" if ok else f"file {rel!r} was modified unexpectedly",
+            }
+        )
+
+    if "allowed_changed_paths" in assertions:
+        allowed_patterns = assertions["allowed_changed_paths"]
+        unexpected = sorted(
+            rel
+            for rel in all_changed
+            if not any(_matches_path_pattern(rel, pat) for pat in allowed_patterns)
+        )
+        ok = not unexpected
+        checks.append(
+            {
+                "kind": "allowed_changed_paths",
+                "category": "context",
+                "name": "scope-boundary",
+                "passed": ok,
+                "detail": "all changes within allowed scope"
+                if ok
+                else f"unintended file change(s) outside allowed scope: {', '.join(unexpected)}",
             }
         )
 
@@ -615,6 +678,7 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "max_changed_files",
+                "category": "context",
                 "name": f"<= {limit}",
                 "passed": ok,
                 "detail": f"{count} changed file(s) (limit {limit})",
@@ -625,12 +689,13 @@ def evaluate_assertions(
         matches = sorted(
             rel
             for rel in all_changed
-            if fnmatch.fnmatch(rel, pattern) or fnmatch.fnmatch(Path(rel).name, pattern)
+            if _matches_path_pattern(rel, pattern)
         )
         ok = not matches
         checks.append(
             {
                 "kind": "forbidden_path",
+                "category": "context",
                 "name": pattern,
                 "passed": ok,
                 "detail": "no forbidden changes" if ok else f"forbidden path(s) changed: {', '.join(matches)}",
@@ -642,11 +707,13 @@ def evaluate_assertions(
         pattern = entry["pattern"]
         literal = entry.get("literal", False)
         name = entry.get("name") or f"{rel}: {pattern}"
+        category = entry.get("category") or ("documentation" if _is_doc_path(rel) else "execution")
         target = workspace / rel
         if not target.is_file():
             checks.append(
                 {
                     "kind": "file_contains",
+                    "category": category,
                     "name": name,
                     "passed": False,
                     "detail": f"file {rel!r} does not exist",
@@ -658,6 +725,7 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "file_contains",
+                "category": category,
                 "name": name,
                 "passed": ok,
                 "detail": "matched" if ok else f"pattern {pattern!r} not found in {rel!r}",
@@ -669,11 +737,13 @@ def evaluate_assertions(
         pattern = entry["pattern"]
         literal = entry.get("literal", False)
         name = entry.get("name") or f"{rel}: !{pattern}"
+        category = entry.get("category") or ("documentation" if _is_doc_path(rel) else "execution")
         target = workspace / rel
         if not target.is_file():
             checks.append(
                 {
                     "kind": "file_not_contains",
+                    "category": category,
                     "name": name,
                     "passed": True,
                     "detail": f"file {rel!r} does not exist",
@@ -685,6 +755,7 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "file_not_contains",
+                "category": category,
                 "name": name,
                 "passed": ok,
                 "detail": "absent" if ok else f"disallowed pattern {pattern!r} matched in {rel!r}",
@@ -698,6 +769,9 @@ def evaluate_assertions(
     }
     for entry in assertions.get("commands", []):
         name = entry["name"]
+        category = entry.get("category") or (
+            "documentation" if ("okf" in name.lower() or "markdown" in name.lower()) else "execution"
+        )
         expect_code = entry.get("expect_exit_code", 0)
         argv = _substitute_tokens(entry["cmd"], substitutions)
         try:
@@ -713,6 +787,7 @@ def evaluate_assertions(
             checks.append(
                 {
                     "kind": "command",
+                    "category": category,
                     "name": name,
                     "passed": False,
                     "detail": f"command timed out after {command_timeout}s",
@@ -723,6 +798,7 @@ def evaluate_assertions(
             checks.append(
                 {
                     "kind": "command",
+                    "category": category,
                     "name": name,
                     "passed": False,
                     "detail": f"failed to launch command: {exc}",
@@ -752,6 +828,7 @@ def evaluate_assertions(
         checks.append(
             {
                 "kind": "command",
+                "category": category,
                 "name": name,
                 "passed": ok,
                 "detail": detail,
@@ -762,10 +839,12 @@ def evaluate_assertions(
         pattern = entry["pattern"]
         literal = entry.get("literal", False)
         name = entry.get("name") or pattern
+        category = entry.get("category") or "execution"
         ok = _matches(response_text, pattern, literal=literal)
         checks.append(
             {
                 "kind": "response_contains",
+                "category": category,
                 "name": name,
                 "passed": ok,
                 "detail": "matched" if ok else f"pattern {pattern!r} not found in agent response",
@@ -776,10 +855,12 @@ def evaluate_assertions(
         pattern = entry["pattern"]
         literal = entry.get("literal", False)
         name = entry.get("name") or f"!{pattern}"
+        category = entry.get("category") or "execution"
         ok = not _matches(response_text, pattern, literal=literal)
         checks.append(
             {
                 "kind": "response_not_contains",
+                "category": category,
                 "name": name,
                 "passed": ok,
                 "detail": "absent" if ok else f"disallowed pattern {pattern!r} matched in agent response",
@@ -897,9 +978,11 @@ def run_scenario(
                     "command_preview": " ".join(shlex.quote(part) for part in preview_cmd),
                 },
                 "changed_files": {"added": [], "modified": [], "deleted": []},
+                "failed_categories": [],
                 "checks": [
                     {
                         "kind": "staging",
+                        "category": "runner",
                         "name": "workspace-staged",
                         "passed": True,
                         "detail": f"staged {len(before_snapshot)} file(s) with skills: {', '.join(scenario['workspace']['copy_skills'])}",
@@ -977,6 +1060,7 @@ def run_scenario(
             checks.append(
                 {
                     "kind": "runner",
+                    "category": "runner",
                     "name": mode,
                     "passed": False,
                     "detail": launch_error,
@@ -987,6 +1071,7 @@ def run_scenario(
             checks.append(
                 {
                     "kind": "runner",
+                    "category": "runner",
                     "name": mode,
                     "passed": False,
                     "detail": f"runner timed out after {timeout}s",
@@ -999,6 +1084,7 @@ def run_scenario(
                 checks.append(
                     {
                         "kind": "runner",
+                        "category": "runner",
                         "name": mode,
                         "passed": False,
                         "detail": f"runner exited with code {exit_code}" + (f" | {stderr_hint}" if stderr_hint else ""),
@@ -1008,6 +1094,7 @@ def run_scenario(
                 checks.append(
                     {
                         "kind": "runner",
+                        "category": "runner",
                         "name": mode,
                         "passed": True,
                         "detail": "runner exited with code 0",
@@ -1042,6 +1129,7 @@ def run_scenario(
                 "launch_error": launch_error,
             },
             "changed_files": changed,
+            "failed_categories": sorted({c.get("category", "execution") for c in checks if not c["passed"]}),
             "checks": checks,
             "response_excerpt": excerpt,
         }
@@ -1100,12 +1188,18 @@ def run_suite(
         for scenario in selected
     ]
 
+    failures_by_category: dict[str, int] = {}
+    for result in results:
+        for cat in result.get("failed_categories", []):
+            failures_by_category[cat] = failures_by_category.get(cat, 0) + 1
+
     counts = {
         "total": len(results),
         "passed": sum(1 for r in results if r["status"] == "passed"),
         "failed": sum(1 for r in results if r["status"] == "failed"),
         "error": sum(1 for r in results if r["status"] == "error"),
         "dry_run": sum(1 for r in results if r["status"] == "dry-run"),
+        "failures_by_category": dict(sorted(failures_by_category.items())),
     }
     return {
         "schema_version": SCHEMA_VERSION,
@@ -1169,15 +1263,21 @@ def format_report(report: dict[str, Any], fmt: str = "text") -> str:
         failures = [item for item in report["scenarios"] if item["status"] in ("failed", "error")]
         if failures:
             lines.extend(["", "### Failure Diagnostics", ""])
+            if summary.get("failures_by_category"):
+                cats = ", ".join(f"`{k}`={v}" for k, v in summary["failures_by_category"].items())
+                lines.extend([f"Failures by diagnostic category: {cats}", ""])
             for item in failures:
-                lines.append(f"- **`{item['id']}`** (`{item['skill']}`, `{item['status']}`)")
+                failed_cats = ", ".join(item.get("failed_categories", [])) or "unknown"
+                lines.append(f"- **`{item['id']}`** (`{item['skill']}`, `{item['status']}`, categories: `{failed_cats}`)")
                 changed = item["changed_files"]
                 lines.append(
                     f"  - Changed files: added={changed['added']}, modified={changed['modified']}, deleted={changed['deleted']}"
                 )
                 for check in item["checks"]:
                     if not check["passed"]:
-                        lines.append(f"  - Failed `{check['kind']}` (`{check['name']}`): {check['detail']}")
+                        lines.append(
+                            f"  - Failed `[{check.get('category', 'execution')}]` `{check['kind']}` (`{check['name']}`): {check['detail']}"
+                        )
         return "\n".join(lines)
 
     lines = [
@@ -1197,9 +1297,13 @@ def format_report(report: dict[str, Any], fmt: str = "text") -> str:
             lines.append(
                 f"    changed: added={changed['added']} modified={changed['modified']} deleted={changed['deleted']}"
             )
+            if item.get("failed_categories"):
+                lines.append(f"    categories: {', '.join(item['failed_categories'])}")
             for check in item["checks"]:
                 if not check["passed"]:
-                    lines.append(f"    FAIL [{check['kind']}] {check['name']}: {check['detail']}")
+                    lines.append(
+                        f"    FAIL [{check.get('category', 'execution')}/{check['kind']}] {check['name']}: {check['detail']}"
+                    )
         elif item["status"] == "dry-run":
             lines.append(f"    preview: {item['runner']['command_preview']}")
     return "\n".join(lines)

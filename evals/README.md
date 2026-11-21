@@ -167,3 +167,44 @@ When a scenario fails, the report captures runner exit status, exact added/modif
 - Never place API keys, tokens, private URLs, or personal data in `evals/codex-scenarios.yaml`, fixture files, or committed outputs.
 - Runtime reports redact detected secret patterns and sensitive environment variable values before printing or writing `--output` files.
 - Store local model-backed evaluation outputs under `.eval-results/` (listed in `.gitignore`) and share only sanitized summaries in pull requests or release notes.
+
+## End-To-End Maintenance Regression Scenarios
+
+While `codex-scenarios.yaml` exercises minimal single-file tasks, [regression-scenarios.yaml](regression-scenarios.yaml) runs end-to-end regression scenarios against the multi-module fixture repository in [fixtures/maintenance-app/](fixtures/maintenance-app/README.md) (see [fixtures/README.md](fixtures/README.md) for fixture layout rules).
+
+Every regression scenario stages **all five canonical Skills** into `.agents/skills/` inside an isolated git copy of `evals/fixtures/maintenance-app/` and enforces strict scope and behavior checks:
+
+| Scenario ID | Core Skill | Workflow & Regression Guardrails |
+| --- | --- | --- |
+| `e2e-implement-feature-invoice-currency` | `implement-feature` | Implement optional invoice currency, keep USD output backward-compatible, update `okf/features/invoices.md` and `okf/log.md`, leave unrelated modules untouched. |
+| `e2e-investigate-bug-tax-discount-order` | `investigate-bug` | Use `okf/features/invoices.md` to reproduce a discount-before-tax bug and assess `src/reporting.py` impact with zero file modifications (`allowed_changed_paths: []`). |
+| `e2e-add-test-reporting-boundaries` | `add-test` | Expand `tests/test_reporting.py` for empty input, invalid status `ValueError`, and taxed totals without editing production code or OKF docs. |
+| `e2e-refactor-safely-report-aggregation` | `refactor-safely` | Deduplicate reporting aggregation inside `src/reporting.py` while preserving public behavior, baseline tests, and OKF docs unchanged. |
+| `e2e-update-okf-storage-and-void-status` | `update-okf` | Inspect an unstaged multi-file `git diff` (`src/invoices.py`, `src/storage.py`) and synchronize `okf/architecture/ledger.md`, `okf/features/invoices.md`, and `okf/log.md` without altering code or tests. |
+
+### Unintended-Change Checks And Failure Diagnostics
+
+Regression scenarios use `allowed_changed_paths` alongside `files_must_not_change` and `max_changed_files` to catch unintended edits anywhere in the workspace (such as edits to unrelated modules like `src/storage.py` or `CLAUDE.md`).
+
+Each assertion is tagged with a diagnostic category so failures pinpoint the layer that drifted:
+
+- **`routing`**: whether the intended Skill was selected and referenced.
+- **`context`**: whether repository guardrails, scope boundaries (`allowed_changed_paths`, `files_must_not_change`), and OKF context rules were respected.
+- **`execution`**: whether code changes, behavioral contract checks, and unit tests pass.
+- **`documentation`**: whether OKF documents and `okf/log.md` were synchronized and pass `scripts/validate_okf.py`.
+- **`runner`**: runner launch, exit code, or timeout errors.
+
+### Running Deterministic vs Codex/API-Backed Regression Checks
+
+```bash
+# Deterministic offline regression checks (CI & fast local development)
+python -m unittest discover -s tests -v
+python scripts/eval_codex_skills.py --scenarios evals/regression-scenarios.yaml --mode validate
+python scripts/eval_codex_skills.py --scenarios evals/regression-scenarios.yaml --mode dry-run
+
+# Codex / API-backed E2E regression run (local authenticated Codex CLI)
+python scripts/eval_codex_skills.py   --scenarios evals/regression-scenarios.yaml   --mode codex   --format markdown   --output .eval-results/regression-eval.md
+
+# Run a single regression scenario during Skill iteration
+python scripts/eval_codex_skills.py   --scenarios evals/regression-scenarios.yaml   --mode codex   --scenario e2e-investigate-bug-tax-discount-order
+```
