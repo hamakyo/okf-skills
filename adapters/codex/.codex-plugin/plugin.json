@@ -1,6 +1,6 @@
 {
   "name": "okf-skills",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Reusable software-maintenance Skills designed to pair with Open Knowledge Format (OKF v0.3) project knowledge.",
   "license": "MIT",
   "repository": "https://github.com/hamakyo/okf-skills",

@@ -235,29 +235,25 @@ See [docs/usage-matrix.md](docs/usage-matrix.md) for a compact Codex, Claude Cod
 
 ## Roadmap
 
-The next stage of OKF Skills is to move from a reusable template library toward a verifiable reference implementation for agent-assisted software maintenance. The roadmap emphasizes reliability, reproducible evaluation, and interoperability rather than adding a large number of narrowly scoped Skills.
+The next stage of OKF Skills builds on the v0.3.0 foundation (OKF v0.3 alignment, routing accuracy scoring, automated Codex and E2E regression harnesses, and optional generated host adapters) toward a verifiable, multi-host v1.0 reference implementation for agent-assisted software maintenance.
 
-### Now — Reliability
+### Now — Real-Host Verification
 
-- Expand positive, negative, and ambiguous Skill routing fixtures and define measurable selection accuracy ([#5](https://github.com/hamakyo/okf-skills/issues/5)).
-- Continue deterministic validation and synchronization checks for Skills, OKF documents, and examples.
-- Improve Codex-facing examples and document expected behavior and failure modes.
+- Run real-host smoke tests for generated Codex / Claude Code adapters and record model-backed evaluation baselines ([#14](https://github.com/hamakyo/okf-skills/issues/14)).
+- Continue deterministic validation and synchronization checks for Skills, OKF bundles, examples, and adapters.
 
-### Next — Evaluation
+### Next — Upgradeability & Ecosystem Fit
 
-- Build an automated evaluation harness for Codex-facing Skills ([#4](https://github.com/hamakyo/okf-skills/issues/4)).
-- Add reproducible end-to-end regression scenarios for common software-maintenance workflows ([#6](https://github.com/hamakyo/okf-skills/issues/6)).
-- Separate deterministic repository checks from model-backed evaluations so failures remain diagnosable.
+- Add a versioning and migration guide for OKF v0.3 and `okf-skills` upgrades ([#15](https://github.com/hamakyo/okf-skills/issues/15)).
+- Document interoperability workflows with upstream OKF Skills (`okf-generate` and `okf-consume`) ([#16](https://github.com/hamakyo/okf-skills/issues/16)).
 
-### Later — Interoperability
+### Later — Multi-Host Interoperability
 
-- Evaluate adapters and plugin-style packaging without replacing the portable copy-based workflow ([#3](https://github.com/hamakyo/okf-skills/issues/3)).
-- Define compatibility tests for additional agentic coding environments.
-- Improve versioning and migration guidance as the OKF software-project profile evolves.
+- Extend the reproducible evaluation runner and compatibility tests beyond Codex, including Claude Code CLI and additional agentic coding environments ([#17](https://github.com/hamakyo/okf-skills/issues/17)).
 
 ### Toward v1.0
 
-A future v1.0 should provide stable Skill conventions, reproducible evaluation coverage, a stable OKF software-project profile, documented compatibility guarantees, and clear migration rules.
+A future v1.0 should provide stable Skill conventions, reproducible multi-host evaluation coverage, a stable OKF software-project profile, documented compatibility guarantees, and clear migration rules.
 
 ## Contribution
 
