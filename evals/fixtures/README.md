@@ -11,7 +11,7 @@ evals/fixtures/<name>/
 ├── AGENTS.md           # Codex repository instructions
 ├── CLAUDE.md           # Claude Code repository instructions
 ├── README.md           # Project overview and test command
-├── okf/                # Valid OKF v0.2 project knowledge bundle
+├── okf/                # Valid OKF v0.3 project knowledge bundle
 │   ├── index.md
 │   ├── log.md
 │   ├── architecture/

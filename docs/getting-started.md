@@ -32,7 +32,7 @@ Keep the root frontmatter declaration:
 
 ```yaml
 ---
-okf_version: "0.2"
+okf_version: "0.3"
 ---
 ```
 
@@ -56,7 +56,7 @@ tags: [architecture]
 ---
 ```
 
-Only `type` is universally required. Add optional provenance, verification, status, or freshness metadata when the values are known. See [OKF v0.2](okf.md) and the [Software Project Profile](okf-software-project-profile.md).
+Only `type` is universally required. Add optional provenance, verification, status, or freshness metadata when the values are known. See [OKF v0.3](okf.md) and the [Software Project Profile](okf-software-project-profile.md).
 
 ## 4. Choose a Skill
 

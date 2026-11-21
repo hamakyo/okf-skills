@@ -1,5 +1,8 @@
 ---
-okf_version: "0.2"
+okf_version: "0.3"
+title: OKF Skills Knowledge Bundle
+description: Durable project knowledge for the OKF Skills template repository.
+license: MIT
 ---
 
 # OKF Skills Knowledge Bundle
@@ -28,5 +31,5 @@ This OKF bundle describes the reusable knowledge for this template repository.
 
 ## External Reference
 
-- [Open Knowledge Format SPEC](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md)
+- [Open Knowledge Format SPEC](https://github.com/open-knowledge-format/open-knowledge-format/blob/main/SPEC.md)
 - [Software Project Profile](../docs/okf-software-project-profile.md) - Repository-specific OKF conventions for software projects.

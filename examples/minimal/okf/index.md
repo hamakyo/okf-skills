@@ -1,5 +1,7 @@
 ---
-okf_version: "0.2"
+okf_version: "0.3"
+title: Project Knowledge
+description: Durable project knowledge bundle for this repository.
 ---
 
 # Project Knowledge

@@ -10,7 +10,7 @@
   <a href="README.md">English</a> | 日本語
 </p>
 
-Codex、Claude Code、その他のエージェント支援型ソフトウェア開発で再利用できる Skills と、OKF v0.2に基づくソフトウェアプロジェクト向けプロファイルです。
+Codex、Claude Code、その他のエージェント支援型ソフトウェア開発で再利用できる Skills と、OKF v0.3に基づくソフトウェアプロジェクト向けプロファイルです。
 
 ## このリポジトリが解決すること
 
@@ -28,7 +28,7 @@ AIコーディングエージェントは、プロジェクト固有の知識と
 
 ### OKF
 
-OKF（Open Knowledge Format）は、プロジェクトの知識レイヤーです。このリポジトリはOKF v0.2を対象とし、アーキテクチャ、ドメイン、データ、機能、プレイブックを整理するためのソフトウェアプロジェクト向けプロファイルを追加します。これらのディレクトリ分類は、OKF本体の必須要件ではありません。
+OKF（Open Knowledge Format）は、プロジェクトの知識レイヤーです。このリポジトリはOKF v0.3を対象とし、アーキテクチャ、ドメイン、データ、機能、プレイブックを整理するためのソフトウェアプロジェクト向けプロファイルを追加します。これらのディレクトリ分類は、OKF本体の必須要件ではありません。
 
 OKFが答える問いは、**「このプロジェクトについて何が正しいか？」** です。
 
@@ -182,7 +182,7 @@ OKFには、タスクごとの指示ではなく、長く使えるプロジェ�
 - 必要に応じた関連OKFドキュメントへのリンク
 - エージェントが推測せずに済む具体的な情報
 - 外部資料に基づく内容であれば、フロントマターの `sources`（必要に応じて `id` で紐づく Markdown 脚注）
-- 値が分かる場合に限った、v0.2のprovenance、trust、lifecycle metadata
+- 値が分かる場合に限った、v0.3のprovenance、trust、lifecycle metadata
 
 例：
 
@@ -203,7 +203,7 @@ The export includes the same rows currently visible after filters are applied.
 - Reporting overview: `okf/domain/reporting.md`
 ```
 
-upstreamのモデルは [OKF v0.2](docs/okf.md)、このリポジトリ独自の規約は [Software Project Profile](docs/okf-software-project-profile.md) を参照してください。
+upstreamのモデルは [OKF v0.3](docs/okf.md)、このリポジトリ独自の規約は [Software Project Profile](docs/okf-software-project-profile.md) を参照してください。
 
 ## 自分のリポジトリに追加する
 

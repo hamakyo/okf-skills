@@ -6,7 +6,7 @@ This document records the packaging decision, tradeoffs, and host-specific insta
 
 1. **Preserve copy-based installation as the primary path.** Copying selected Skills from top-level `skills/` into `.agents/skills/` (Codex) or `.claude/skills/` (Claude Code) remains the default, zero-dependency workflow.
 2. **Keep `skills/` strictly canonical and host-neutral.** Top-level `skills/*/SKILL.md` files follow the Agent Skills standard and this repository's authoring profile without host-specific metadata or manifests.
-3. **Keep OKF v0.2 conformance independent of packaging.** Adopting OKF (`okf/index.md`, `okf/log.md`, concept files) never requires installing a plugin or adapter.
+3. **Keep OKF v0.3 conformance independent of packaging.** Adopting OKF (`okf/index.md`, `okf/log.md`, concept files) never requires installing a plugin or adapter.
 4. **Ship optional, deterministically generated host adapters under `adapters/`.** Because both Codex (`agents/openai.yaml` + `.codex-plugin/plugin.json`) and Claude Code (`.claude-plugin/plugin.json` + `--plugin-dir`) provide concrete discovery and distribution ergonomics when distributing multiple Skills as a unit, this repository maintains generated adapter prototypes under [../adapters/](../adapters/README.md):
    - `adapters/codex/`: Codex plugin layout with synced `skills/*/SKILL.md` and per-Skill `agents/openai.yaml` UI and invocation policy metadata.
    - `adapters/claude-code/`: Claude Code plugin layout with `.claude-plugin/plugin.json` and synced `skills/*/SKILL.md`.

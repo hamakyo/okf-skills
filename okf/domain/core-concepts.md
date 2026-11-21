@@ -3,12 +3,12 @@ type: Domain Concept
 title: Core Concepts
 description: Defines the main concepts used by the OKF Skills template.
 tags: [okf, skills, agents, claude]
-generated: { by: openai-codex/gpt-5, at: 2026-08-21T18:26:11+09:00 }
+generated: { by: google-antigravity/agent, at: 2026-11-22T06:05:00+09:00 }
 ---
 
 # OKF
 
-OKF is the knowledge layer. It stores durable project facts in Markdown. This repository targets OKF v0.2.
+OKF is the knowledge layer. It stores durable project facts in Markdown. This repository targets OKF v0.3.
 
 # Software Project Profile
 
