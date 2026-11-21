@@ -1,0 +1,503 @@
+schema_version: 1
+host: codex
+defaults:
+  skill_dir: .agents/skills
+  timeout_seconds: 300
+scenarios:
+  - id: e2e-implement-feature-invoice-currency
+    skill: implement-feature
+    title: Implement optional invoice currency and synchronize OKF
+    description: >-
+      End-to-end regression scenario verifying that Codex adds an optional
+      currency field to Invoice and format_invoice_summary, writes focused
+      tests, updates OKF behavior docs and okf/log.md, and leaves unrelated
+      modules untouched.
+    prompt: >-
+      Read AGENTS.md, README.md, and okf/index.md first, then use the
+      appropriate Skill in .agents/skills/ for implementing a small feature.
+      Add an optional `currency: str = "USD"` field to `Invoice` in
+      `src/invoices.py` and update `format_invoice_summary(invoice)` so USD
+      invoices preserve the exact existing `$D.CC` output while non-USD
+      currencies format as `<CURRENCY> <D>.<CC>` (for example, `EUR 12.50`).
+      Add focused unit tests in `tests/test_invoices.py`, update
+      `okf/features/invoices.md` and `okf/log.md` to document the behavior
+      change, and keep unrelated modules (`src/reporting.py`, `src/storage.py`,
+      `AGENTS.md`, `CLAUDE.md`) untouched. Run the full test suite and report
+      which Skill you used and which checks you ran.
+    workspace:
+      fixture: evals/fixtures/maintenance-app
+      copy_skills:
+        - implement-feature
+        - investigate-bug
+        - add-test
+        - refactor-safely
+        - update-okf
+    assertions:
+      allowed_changed_paths:
+        - src/invoices.py
+        - tests/test_invoices.py
+        - okf/features/invoices.md
+        - okf/log.md
+      files_must_exist:
+        - src/invoices.py
+        - tests/test_invoices.py
+        - okf/features/invoices.md
+        - okf/log.md
+      files_must_change:
+        - src/invoices.py
+        - tests/test_invoices.py
+        - okf/features/invoices.md
+        - okf/log.md
+      files_must_not_change:
+        - src/reporting.py
+        - src/storage.py
+        - tests/test_reporting.py
+        - tests/test_storage.py
+        - AGENTS.md
+        - CLAUDE.md
+      max_changed_files: 4
+      forbidden_paths:
+        - ".env"
+        - "*.key"
+        - "*.pem"
+      file_contains:
+        - path: src/invoices.py
+          pattern: "currency"
+          category: execution
+        - path: tests/test_invoices.py
+          pattern: "currency"
+          category: execution
+        - path: okf/features/invoices.md
+          pattern: "(?i)currency"
+          category: documentation
+      commands:
+        - name: unit-tests
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+          category: execution
+        - name: currency-contract-and-backcompat
+          cmd:
+            - "{python}"
+            - "-c"
+            - >-
+              from src.invoices import Invoice, format_invoice_summary;
+              assert format_invoice_summary(Invoice("INV-1", 1250, status="paid")) == "INV-1 [paid]: $12.50";
+              assert format_invoice_summary(Invoice("INV-2", 1250, status="open", currency="EUR")) == "INV-2 [open]: EUR 12.50"
+          expect_exit_code: 0
+          category: execution
+        - name: okf-validation
+          cmd: ["{python}", "{repo_root}/scripts/validate_okf.py", "{workspace}/okf"]
+          expect_exit_code: 0
+          category: documentation
+      response_contains:
+        - name: routing-skill-referenced
+          pattern: "implement-feature"
+          category: routing
+        - name: execution-tests-reported
+          pattern: "(?i)(unittest|test)"
+          category: execution
+        - name: documentation-okf-reported
+          pattern: "okf/features/invoices\\.md"
+          category: documentation
+
+  - id: e2e-investigate-bug-tax-discount-order
+    skill: investigate-bug
+    title: Investigate discount-before-tax pricing bug without editing files
+    description: >-
+      End-to-end regression scenario verifying that Codex uses OKF context to
+      reproduce a pricing discrepancy, identifies the root cause and impact
+      across modules, proposes the smallest fix, and makes zero file edits.
+    prompt: >-
+      Read AGENTS.md, okf/index.md, and okf/features/invoices.md first, then use
+      the appropriate Skill in .agents/skills/ for bug investigation.
+      Do not modify any files or apply a fix yet.
+      Customers report that an invoice with `subtotal_cents=2000`,
+      `discount_percent=20`, and `tax_percent=10` is billed `$18.00` instead of
+      `$17.60`. Reproduce the discrepancy, identify the exact root cause in
+      `src/invoices.py`, explain the impact on `src/reporting.py`, and propose
+      the smallest fix. State which Skill you used.
+    workspace:
+      fixture: evals/fixtures/maintenance-app
+      copy_skills:
+        - implement-feature
+        - investigate-bug
+        - add-test
+        - refactor-safely
+        - update-okf
+      files:
+        src/invoices.py: |
+          """Invoice model, pricing calculation, and summary formatting."""
+
+          from __future__ import annotations
+
+          from dataclasses import dataclass
+
+          VALID_STATUSES = frozenset({"open", "paid"})
+
+
+          @dataclass(frozen=True)
+          class Invoice:
+              invoice_id: str
+              subtotal_cents: int
+              discount_percent: int = 0
+              tax_percent: int = 0
+              status: str = "open"
+
+
+          def calculate_invoice_total(invoice: Invoice) -> int:
+              """Compute final invoice total in cents."""
+              if invoice.subtotal_cents < 0:
+                  raise ValueError("subtotal_cents must be non-negative")
+              if not 0 <= invoice.discount_percent <= 100:
+                  raise ValueError("discount_percent must be between 0 and 100")
+              if not 0 <= invoice.tax_percent <= 100:
+                  raise ValueError("tax_percent must be between 0 and 100")
+              if invoice.status not in VALID_STATUSES:
+                  raise ValueError(f"unsupported invoice status: {invoice.status!r}")
+
+              discount = invoice.subtotal_cents * invoice.discount_percent // 100
+              tax = invoice.subtotal_cents * invoice.tax_percent // 100
+              return invoice.subtotal_cents - discount + tax
+
+
+          def format_cents(amount_cents: int) -> str:
+              """Format an integer cent amount as $D.CC."""
+              sign = "-" if amount_cents < 0 else ""
+              whole, remainder = divmod(abs(amount_cents), 100)
+              return f"{sign}${whole}.{remainder:02d}"
+
+
+          def format_invoice_summary(invoice: Invoice) -> str:
+              """Return a compact human-readable summary for one invoice."""
+              total = calculate_invoice_total(invoice)
+              return f"{invoice.invoice_id} [{invoice.status}]: {format_cents(total)}"
+    assertions:
+      allowed_changed_paths: []
+      files_must_not_change:
+        - src/invoices.py
+        - src/reporting.py
+        - src/storage.py
+        - tests/test_invoices.py
+        - okf/features/invoices.md
+        - okf/log.md
+      max_changed_files: 0
+      commands:
+        - name: baseline-tests-intact
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+          category: execution
+      response_contains:
+        - name: routing-skill-referenced
+          pattern: "investigate-bug"
+          category: routing
+        - name: context-cites-okf-rule
+          pattern: "(?i)(before\\s+tax|discounted|okf/features/invoices\\.md)"
+          category: context
+        - name: context-notes-reporting-impact
+          pattern: "reporting"
+          category: context
+        - name: execution-pinpoints-root-cause
+          pattern: "(src/invoices\\.py|calculate_invoice_total)"
+          category: execution
+        - name: execution-reproduces-values
+          pattern: "(1800|18\\.00)"
+          category: execution
+
+  - id: e2e-add-test-reporting-boundaries
+    skill: add-test
+    title: Add reporting tests for documented behavior without production edits
+    description: >-
+      End-to-end regression scenario verifying that Codex expands unittest
+      coverage in tests/test_reporting.py for empty input, invalid status
+      errors, and multi-invoice aggregation without editing production code or
+      changing unspecified behavior.
+    prompt: >-
+      Read AGENTS.md, okf/features/reporting.md, src/reporting.py, and
+      tests/test_reporting.py first, then use the appropriate Skill in
+      .agents/skills/ for adding tests.
+      Do not modify any production files under `src/` or any files under `okf/`.
+      Add focused tests in `tests/test_reporting.py` covering empty invoice
+      inputs, unsupported status raising `ValueError`, and discounted/taxed
+      aggregation totals. Run the full test suite and report which Skill you
+      used and what cases are now covered.
+    workspace:
+      fixture: evals/fixtures/maintenance-app
+      copy_skills:
+        - implement-feature
+        - investigate-bug
+        - add-test
+        - refactor-safely
+        - update-okf
+    assertions:
+      allowed_changed_paths:
+        - tests/test_reporting.py
+      files_must_exist:
+        - tests/test_reporting.py
+      files_must_change:
+        - tests/test_reporting.py
+      files_must_not_change:
+        - src/reporting.py
+        - src/invoices.py
+        - src/storage.py
+        - tests/test_invoices.py
+        - tests/test_storage.py
+        - okf/features/reporting.md
+        - okf/log.md
+      max_changed_files: 1
+      file_contains:
+        - path: tests/test_reporting.py
+          pattern: "assertRaises\\(ValueError\\)"
+          category: execution
+      commands:
+        - name: unit-tests
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+          category: execution
+        - name: minimum-reporting-tests
+          cmd:
+            - "{python}"
+            - "-c"
+            - >-
+              import ast, pathlib;
+              tree = ast.parse(pathlib.Path("tests/test_reporting.py").read_text(encoding="utf-8"));
+              methods = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")];
+              assert len(methods) >= 3, f"expected at least 3 test methods, found {methods}"
+          expect_exit_code: 0
+          category: execution
+      response_contains:
+        - name: routing-skill-referenced
+          pattern: "add-test"
+          category: routing
+        - name: execution-reports-test-file
+          pattern: "test_reporting\\.py"
+          category: execution
+
+  - id: e2e-refactor-safely-report-aggregation
+    skill: refactor-safely
+    title: Deduplicate reporting aggregation while preserving public behavior
+    description: >-
+      End-to-end regression scenario verifying that Codex extracts duplicated
+      status-aggregation logic in src/reporting.py without changing public APIs,
+      return shapes, formatted output, tests, or OKF documents.
+    prompt: >-
+      Read AGENTS.md, okf/features/reporting.md, src/reporting.py, and
+      tests/test_reporting.py first, then use the appropriate Skill in
+      .agents/skills/ for safe refactoring.
+      Remove the duplicated status-validation and cent-aggregation loop between
+      `summarize_invoices` and `format_monthly_report` in `src/reporting.py` by
+      extracting a private helper (starting with `_`) or reusing
+      `summarize_invoices`. Preserve all public signatures, return shapes,
+      error messages, and formatted text. Do not modify any test files, other
+      `src/` modules, or any files under `okf/`. Run the full test suite and
+      state which Skill you used.
+    workspace:
+      fixture: evals/fixtures/maintenance-app
+      copy_skills:
+        - implement-feature
+        - investigate-bug
+        - add-test
+        - refactor-safely
+        - update-okf
+    assertions:
+      allowed_changed_paths:
+        - src/reporting.py
+      files_must_exist:
+        - src/reporting.py
+      files_must_change:
+        - src/reporting.py
+      files_must_not_change:
+        - src/invoices.py
+        - src/storage.py
+        - tests/test_reporting.py
+        - tests/test_invoices.py
+        - tests/test_storage.py
+        - okf/features/reporting.md
+        - okf/architecture/ledger.md
+        - okf/log.md
+      max_changed_files: 1
+      file_contains:
+        - path: src/reporting.py
+          pattern: "def summarize_invoices"
+          category: execution
+        - path: src/reporting.py
+          pattern: "def format_monthly_report"
+          category: execution
+      commands:
+        - name: unit-tests
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+          category: execution
+        - name: behavior-preservation-check
+          cmd:
+            - "{python}"
+            - "-c"
+            - >-
+              from src.invoices import Invoice;
+              from src.reporting import format_monthly_report, summarize_invoices;
+              items = [Invoice("A", 1000, status="open"), Invoice("B", 2000, discount_percent=10, tax_percent=10, status="paid")];
+              assert summarize_invoices(items) == {"count": 2, "open_cents": 1000, "paid_cents": 1980, "total_cents": 2980};
+              assert format_monthly_report(items) == "Invoices: 2\nOpen: $10.00\nPaid: $19.80\nTotal: $29.80";
+              assert summarize_invoices([]) == {"count": 0, "open_cents": 0, "paid_cents": 0, "total_cents": 0}
+          expect_exit_code: 0
+          category: execution
+      response_contains:
+        - name: routing-skill-referenced
+          pattern: "refactor-safely"
+          category: routing
+        - name: execution-reports-tests
+          pattern: "(?i)(unittest|test)"
+          category: execution
+
+  - id: e2e-update-okf-storage-and-void-status
+    skill: update-okf
+    title: Synchronize OKF after architectural storage and status changes
+    description: >-
+      End-to-end regression scenario verifying that Codex inspects a multi-file
+      git diff adding DuplicateInvoiceError, delete_invoice, and void status,
+      and synchronizes architecture/feature OKF docs and okf/log.md without
+      editing code or tests.
+    prompt: >-
+      Read AGENTS.md, okf/index.md, okf/log.md, okf/architecture/ledger.md, and
+      okf/features/invoices.md, then inspect `git diff` in this workspace and
+      use the appropriate Skill in .agents/skills/ for updating OKF.
+      Update `okf/architecture/ledger.md`, `okf/features/invoices.md`, and add
+      a dated `YYYY-MM-DD` entry to `okf/log.md` to capture the durable storage
+      and invoice status changes shown in `git diff`. Do not modify any files
+      under `src/` or `tests/`, `AGENTS.md`, or `CLAUDE.md`. State which Skill
+      you used.
+    workspace:
+      fixture: evals/fixtures/maintenance-app
+      copy_skills:
+        - implement-feature
+        - investigate-bug
+        - add-test
+        - refactor-safely
+        - update-okf
+      working_tree_files:
+        src/invoices.py: |
+          """Invoice model, pricing calculation, and summary formatting."""
+
+          from __future__ import annotations
+
+          from dataclasses import dataclass
+
+          VALID_STATUSES = frozenset({"open", "paid", "void"})
+
+
+          @dataclass(frozen=True)
+          class Invoice:
+              invoice_id: str
+              subtotal_cents: int
+              discount_percent: int = 0
+              tax_percent: int = 0
+              status: str = "open"
+
+
+          def calculate_invoice_total(invoice: Invoice) -> int:
+              """Compute final invoice total in cents (discount applied before tax)."""
+              if invoice.subtotal_cents < 0:
+                  raise ValueError("subtotal_cents must be non-negative")
+              if not 0 <= invoice.discount_percent <= 100:
+                  raise ValueError("discount_percent must be between 0 and 100")
+              if not 0 <= invoice.tax_percent <= 100:
+                  raise ValueError("tax_percent must be between 0 and 100")
+              if invoice.status not in VALID_STATUSES:
+                  raise ValueError(f"unsupported invoice status: {invoice.status!r}")
+              if invoice.status == "void":
+                  return 0
+
+              discounted = invoice.subtotal_cents - (invoice.subtotal_cents * invoice.discount_percent // 100)
+              tax = discounted * invoice.tax_percent // 100
+              return discounted + tax
+
+
+          def format_cents(amount_cents: int) -> str:
+              """Format an integer cent amount as $D.CC."""
+              sign = "-" if amount_cents < 0 else ""
+              whole, remainder = divmod(abs(amount_cents), 100)
+              return f"{sign}${whole}.{remainder:02d}"
+
+
+          def format_invoice_summary(invoice: Invoice) -> str:
+              """Return a compact human-readable summary for one invoice."""
+              total = calculate_invoice_total(invoice)
+              return f"{invoice.invoice_id} [{invoice.status}]: {format_cents(total)}"
+        src/storage.py: |
+          """Minimal in-memory invoice repository."""
+
+          from __future__ import annotations
+
+          from src.invoices import Invoice
+
+
+          class DuplicateInvoiceError(ValueError):
+              """Raised when attempting to store a duplicate invoice_id."""
+
+
+          class InMemoryInvoiceStore:
+              def __init__(self) -> None:
+                  self._items: dict[str, Invoice] = {}
+
+              def add_invoice(self, invoice: Invoice) -> None:
+                  if invoice.invoice_id in self._items:
+                      raise DuplicateInvoiceError(f"duplicate invoice_id: {invoice.invoice_id}")
+                  self._items[invoice.invoice_id] = invoice
+
+              def get_invoice(self, invoice_id: str) -> Invoice | None:
+                  return self._items.get(invoice_id)
+
+              def delete_invoice(self, invoice_id: str) -> bool:
+                  return self._items.pop(invoice_id, None) is not None
+
+              def list_invoices(self) -> list[Invoice]:
+                  return list(self._items.values())
+    assertions:
+      allowed_changed_paths:
+        - okf/architecture/ledger.md
+        - okf/features/invoices.md
+        - okf/log.md
+        - okf/index.md
+      files_must_exist:
+        - okf/architecture/ledger.md
+        - okf/features/invoices.md
+        - okf/log.md
+      files_must_change:
+        - okf/architecture/ledger.md
+        - okf/features/invoices.md
+        - okf/log.md
+      files_must_not_change:
+        - src/invoices.py
+        - src/storage.py
+        - src/reporting.py
+        - tests/test_invoices.py
+        - tests/test_storage.py
+        - tests/test_reporting.py
+        - AGENTS.md
+        - CLAUDE.md
+      max_changed_files: 4
+      file_contains:
+        - path: okf/architecture/ledger.md
+          pattern: "(DuplicateInvoiceError|duplicate)"
+          category: documentation
+        - path: okf/architecture/ledger.md
+          pattern: "delete_invoice"
+          category: documentation
+        - path: okf/features/invoices.md
+          pattern: "\\bvoid\\b"
+          category: documentation
+      commands:
+        - name: okf-validation
+          cmd: ["{python}", "{repo_root}/scripts/validate_okf.py", "{workspace}/okf"]
+          expect_exit_code: 0
+          category: documentation
+        - name: existing-tests-still-pass
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+          category: execution
+      response_contains:
+        - name: routing-skill-referenced
+          pattern: "update-okf"
+          category: routing
+        - name: documentation-files-reported
+          pattern: "okf/architecture/ledger\\.md"
+          category: documentation

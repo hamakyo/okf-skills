@@ -39,3 +39,6 @@ jobs:
 
       - name: Validate Codex evaluation scenarios
         run: python scripts/eval_codex_skills.py --mode validate
+
+      - name: Validate E2E regression scenarios
+        run: python scripts/eval_codex_skills.py --scenarios evals/regression-scenarios.yaml --mode validate
