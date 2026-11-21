@@ -1,4 +1,4 @@
-# Skill Routing Evaluations
+# Skill Evaluations
 
 `skill-routing.yaml` is a machine-readable fixture for checking whether Skill descriptions route realistic maintenance requests to the intended workflow, avoid irrelevant Skills, and disambiguate neighboring Skills consistently.
 
@@ -99,3 +99,71 @@ Before a release that changes Skill descriptions:
 2. Run every prompt from `evals/skill-routing.yaml` in a clean task and record each selected Skill (`null` if none) in a prediction file (do not commit credentials or raw session logs).
 3. Run `python scripts/score_skill_routing.py --predictions <file> --format markdown`.
 4. Confirm overall accuracy, category breakdown, and zero rejected-Skill hits match expectations, and paste the Markdown summary along with host/model/version details into the pull request or release review notes.
+
+## Codex Skill Evaluation Harness
+
+`codex-scenarios.yaml` and `scripts/eval_codex_skills.py` provide a reproducible harness for evaluating whether Codex follows the core Skills in realistic, isolated git workspaces. Rather than grading prose subjectively, every scenario checks observable outcomes: file creation/modification boundaries, guardrail files left untouched, unit tests and OKF validation commands, and required summary facts.
+
+### Scenario Format
+
+`evals/codex-scenarios.yaml` uses `schema_version: 1` with `host: codex`, optional `defaults` (`skill_dir`, `timeout_seconds`), and a `scenarios` list. Each scenario defines:
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | string | yes | Unique kebab-case scenario identifier. |
+| `skill` | string | yes | Canonical Skill under `skills/` exercised by the scenario. |
+| `title` | string | yes | Short human-readable summary of the task. |
+| `description` | string | yes | Concise note describing the observable workflow and guardrails under test. |
+| `prompt` | string | yes | Exact task prompt sent to Codex on stdin. |
+| `timeout_seconds` | int | no | Optional per-scenario timeout override in seconds. |
+| `workspace` | object | yes | Workspace setup: `copy_skills`, inline `files`, optional `working_tree_files` (unstaged diff applied after the baseline commit), and optional `fixture` directory path. |
+| `assertions` | object | yes | Observable pass/fail checks (`files_must_exist`, `files_must_not_exist`, `files_must_change`, `files_must_not_change`, `max_changed_files`, `forbidden_paths`, `file_contains`, `file_not_contains`, `commands`, `response_contains`, `response_not_contains`). |
+
+Included scenarios cover all five canonical Skills:
+
+- `implement-feature-csv-delimiter` (`implement-feature`)
+- `investigate-bug-hundred-percent-discount` (`investigate-bug`)
+- `add-test-slugify-edge-cases` (`add-test`)
+- `refactor-safely-email-normalization` (`refactor-safely`)
+- `update-okf-retry-policy-diff` (`update-okf`)
+
+### Deterministic Repository Checks vs Codex/API-Backed Evaluations
+
+| Dimension | Deterministic Repository Checks (CI) | Codex / API-Backed Evaluations |
+| --- | --- | --- |
+| Commands | `validate_markdown.py`, `validate_okf.py`, `validate_skills.py`, `sync_examples.py --check`, `eval_codex_skills.py --mode validate`, `unittest` | `eval_codex_skills.py --mode codex` (or `--mode command`), plus `score_skill_routing.py` on model predictions |
+| Network & API keys | None (fully offline, zero API cost) | Requires local Codex CLI / model credentials |
+| Reproducibility | Deterministic pass/fail on every commit and PR | Subject to model/runtime variance; evaluated via observable file, command, and guardrail assertions |
+| Primary failure signal | Broken links, invalid OKF/Skill metadata, example drift, malformed fixtures, leaked secrets | Behavioral regressions: missed tests, guardrail violations (e.g., editing code during investigation), invalid OKF updates |
+| Where to run | Every PR in GitHub Actions and locally before commit | Locally before Skill/prompt changes or releases, or in opt-in credentialed workflows |
+
+### Running The Codex Evaluation Harness
+
+```bash
+# 1. Deterministic schema, coverage, and secret-hygiene validation (runs in CI)
+python scripts/eval_codex_skills.py --mode validate
+
+# 2. List scenarios
+python scripts/eval_codex_skills.py --list --format markdown
+
+# 3. Safe dry-run: stage isolated git workspaces and preview commands without calling Codex
+python scripts/eval_codex_skills.py --mode dry-run
+
+# 4. Run against local Codex CLI (requires authenticated `codex` CLI; writes local report outside git)
+python scripts/eval_codex_skills.py --mode codex --format markdown --output .eval-results/codex-eval.md
+
+# 5. Run a single scenario or pass extra Codex CLI flags
+python scripts/eval_codex_skills.py --mode codex --scenario implement-feature-csv-delimiter --codex-arg --model --codex-arg gpt-5-codex
+
+# 6. Run through a custom wrapper or deterministic local stub
+python scripts/eval_codex_skills.py --mode command --command "{python} path/to/wrapper.py" --format json
+```
+
+When a scenario fails, the report captures runner exit status, exact added/modified/deleted workspace files, and per-assertion pass/fail diagnostics so failures can be separated into runner setup errors, guardrail violations, failing tests, or broken OKF metadata.
+
+### Secret And Credential Hygiene
+
+- `eval_codex_skills.py --mode validate` scans prompts and inline workspace files for credential patterns and rejects matches deterministically.
+- Never place API keys, tokens, private URLs, or personal data in `evals/codex-scenarios.yaml`, fixture files, or committed outputs.
+- Runtime reports redact detected secret patterns and sensitive environment variable values before printing or writing `--output` files.
+- Store local model-backed evaluation outputs under `.eval-results/` (listed in `.gitignore`) and share only sanitized summaries in pull requests or release notes.

@@ -1,0 +1,589 @@
+schema_version: 1
+host: codex
+defaults:
+  skill_dir: .agents/skills
+  timeout_seconds: 300
+scenarios:
+  - id: implement-feature-csv-delimiter
+    skill: implement-feature
+    title: Implement configurable CSV delimiter option
+    description: >-
+      Verify that Codex implements an optional delimiter parameter with focused
+      unit tests and updates OKF behavior documentation without unrelated edits.
+    prompt: >-
+      Use the implement-feature skill in .agents/skills/implement-feature/SKILL.md.
+      Read AGENTS.md, okf/index.md, and okf/features/exporter.md first.
+      Add an optional delimiter parameter (default ",") to format_csv_row in
+      src/exporter.py so fields containing the active delimiter, double quotes,
+      or newlines are properly CSV-quoted. Add unit tests in tests/test_exporter.py
+      covering the new delimiter behavior while preserving default comma behavior.
+      Update okf/features/exporter.md and add a dated entry to okf/log.md.
+      Do not modify AGENTS.md. Run the unit tests and report what you ran.
+    workspace:
+      copy_skills:
+        - implement-feature
+        - update-okf
+      files:
+        AGENTS.md: |
+          # Project Instructions
+
+          - Run unit tests with `python3 -m unittest discover -s tests -v`.
+          - Keep diffs small and focused on the requested change.
+          - Update `okf/` and `okf/log.md` when user-visible behavior changes.
+        okf/index.md: |
+          ---
+          okf_version: "0.2"
+          ---
+
+          # Exporter Knowledge Bundle
+
+          - [CSV Exporter](features/exporter.md) - Behavior of CSV row formatting.
+        okf/log.md: |
+          # OKF Update Log
+
+          ## 2026-08-01
+
+          - **Initialization**: Documented CSV row formatting behavior.
+        okf/features/exporter.md: |
+          ---
+          type: Feature
+          title: CSV Row Exporter
+          description: Formats tabular rows into RFC 4180 style CSV lines.
+          tags: [exporter, csv]
+          ---
+
+          # Behavior
+
+          `format_csv_row(values)` serializes a sequence of values using `,` as the field delimiter.
+          Fields containing `,`, `"`, or newline characters are enclosed in double quotes with embedded quotes doubled.
+        src/__init__.py: ""
+        src/exporter.py: |
+          """Minimal CSV row formatter."""
+
+          from __future__ import annotations
+
+          from collections.abc import Iterable
+
+
+          def format_csv_row(values: Iterable[object]) -> str:
+              """Format values as a comma-delimited CSV row."""
+              formatted: list[str] = []
+              for value in values:
+                  text = "" if value is None else str(value)
+                  if any(ch in text for ch in (",", '"', "\n", "\r")):
+                      text = '"' + text.replace('"', '""') + '"'
+                  formatted.append(text)
+              return ",".join(formatted)
+        tests/__init__.py: ""
+        tests/test_exporter.py: |
+          import unittest
+
+          from src.exporter import format_csv_row
+
+
+          class ExporterTests(unittest.TestCase):
+              def test_default_comma_formatting(self) -> None:
+                  self.assertEqual(format_csv_row(["alpha", "beta,gamma", 'say "hi"']), 'alpha,"beta,gamma","say ""hi"""')
+
+
+          if __name__ == "__main__":
+              unittest.main()
+    assertions:
+      files_must_exist:
+        - src/exporter.py
+        - tests/test_exporter.py
+        - okf/features/exporter.md
+        - okf/log.md
+      files_must_change:
+        - src/exporter.py
+        - tests/test_exporter.py
+        - okf/features/exporter.md
+        - okf/log.md
+      files_must_not_change:
+        - AGENTS.md
+      max_changed_files: 6
+      forbidden_paths:
+        - ".env"
+        - "*.key"
+        - "*.pem"
+      file_contains:
+        - path: src/exporter.py
+          pattern: "delimiter"
+        - path: tests/test_exporter.py
+          pattern: "delimiter"
+        - path: okf/features/exporter.md
+          pattern: "(?i)delimiter"
+      commands:
+        - name: unit-tests
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+        - name: delimiter-contract
+          cmd:
+            - "{python}"
+            - "-c"
+            - >-
+              from src.exporter import format_csv_row;
+              assert format_csv_row(["a", "b,c"]) == 'a,"b,c"';
+              assert format_csv_row(["a", "b;c"], delimiter=";") == 'a;"b;c"';
+              assert format_csv_row(["a", "b,c"], delimiter=";") == 'a;b,c'
+          expect_exit_code: 0
+        - name: okf-validation
+          cmd: ["{python}", "{repo_root}/scripts/validate_okf.py", "{workspace}/okf"]
+          expect_exit_code: 0
+      response_contains:
+        - name: mentions-tests
+          pattern: "(?i)(test|unittest)"
+
+  - id: investigate-bug-hundred-percent-discount
+    skill: investigate-bug
+    title: Investigate 100% discount rejection without editing code
+    description: >-
+      Verify that Codex reproduces a boundary bug, identifies the root cause and
+      impact, proposes the smallest fix, and respects the guardrail against
+      editing production files before diagnosis is approved.
+    prompt: >-
+      Use the investigate-bug skill in .agents/skills/investigate-bug/SKILL.md.
+      Do not modify any files or fix the bug yet.
+      Read AGENTS.md, okf/index.md, okf/features/pricing.md, src/pricing.py, and
+      tests/test_pricing.py. Reproduce why apply_discount(1000, 100) fails,
+      identify the exact root cause in src/pricing.py, explain the impact, and
+      propose the smallest fix.
+    workspace:
+      copy_skills:
+        - investigate-bug
+      files:
+        AGENTS.md: |
+          # Project Instructions
+
+          - Run unit tests with `python3 -m unittest discover -s tests -v`.
+          - When asked to investigate first, report reproduction and root cause before modifying files.
+        okf/index.md: |
+          ---
+          okf_version: "0.2"
+          ---
+
+          # Pricing Knowledge Bundle
+
+          - [Pricing](features/pricing.md) - Discount rules for checkout totals.
+        okf/log.md: |
+          # OKF Update Log
+
+          ## 2026-08-01
+
+          - **Initialization**: Documented discount percentage bounds.
+        okf/features/pricing.md: |
+          ---
+          type: Feature
+          title: Checkout Discounts
+          description: Applies percentage discounts to integer cent totals.
+          tags: [pricing, checkout]
+          ---
+
+          # Rules
+
+          - Valid discount percentages are integers from `0` through `100` inclusive.
+          - A `100` percent discount yields `0` cents for free promotional orders.
+        src/__init__.py: ""
+        src/pricing.py: |
+          """Checkout discount calculations."""
+
+          from __future__ import annotations
+
+
+          def apply_discount(cents: int, percent: int) -> int:
+              """Apply an integer percentage discount to a price in cents."""
+              if cents < 0:
+                  raise ValueError("cents must be non-negative")
+              if percent < 0 or percent >= 100:
+                  raise ValueError("percent must be between 0 and 100")
+              return cents - (cents * percent // 100)
+        tests/__init__.py: ""
+        tests/test_pricing.py: |
+          import unittest
+
+          from src.pricing import apply_discount
+
+
+          class PricingTests(unittest.TestCase):
+              def test_zero_discount(self) -> None:
+                  self.assertEqual(apply_discount(1000, 0), 1000)
+
+              def test_twenty_percent_discount(self) -> None:
+                  self.assertEqual(apply_discount(1000, 20), 800)
+
+
+          if __name__ == "__main__":
+              unittest.main()
+    assertions:
+      files_must_not_change:
+        - src/pricing.py
+        - tests/test_pricing.py
+        - AGENTS.md
+        - okf/features/pricing.md
+        - okf/log.md
+      max_changed_files: 0
+      commands:
+        - name: baseline-tests-intact
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+      response_contains:
+        - name: identifies-file-or-function
+          pattern: "(src/pricing\\.py|apply_discount)"
+        - name: identifies-boundary-operator
+          pattern: "(>=\\s*100|percent\\s*>=\\s*100|100)"
+        - name: proposes-fix
+          pattern: "(>\\s*100|inclusive|allow\\s+100)"
+
+  - id: add-test-slugify-edge-cases
+    skill: add-test
+    title: Add normal, boundary, and error tests for slugify
+    description: >-
+      Verify that Codex expands unit test coverage for existing behavior without
+      modifying production code or rewriting the test framework.
+    prompt: >-
+      Use the add-test skill in .agents/skills/add-test/SKILL.md.
+      Read AGENTS.md, src/slug.py, and tests/test_slug.py first.
+      Do not modify src/slug.py. Add focused unit tests in tests/test_slug.py
+      covering normal inputs, boundary inputs (repeated punctuation and
+      leading/trailing separators), and invalid inputs that raise ValueError.
+      Run the test suite and report the covered cases.
+    workspace:
+      copy_skills:
+        - add-test
+      files:
+        AGENTS.md: |
+          # Project Instructions
+
+          - Run unit tests with `python3 -m unittest discover -s tests -v`.
+          - Use Python's built-in `unittest` module.
+        okf/index.md: |
+          ---
+          okf_version: "0.2"
+          ---
+
+          # Slugify Knowledge Bundle
+
+          - [Slug Utility](features/slug.md) - URL slug normalization behavior.
+        okf/log.md: |
+          # OKF Update Log
+
+          ## 2026-08-01
+
+          - **Initialization**: Documented slug normalization rules.
+        okf/features/slug.md: |
+          ---
+          type: Feature
+          title: Slug Utility
+          description: Converts human titles into lowercase hyphen-separated ASCII slugs.
+          tags: [slug, utility]
+          ---
+
+          # Behavior
+
+          `slugify(text)` lowercases ASCII letters and digits, collapses runs of non-alphanumeric
+          characters into single `-` separators, trims edge hyphens, and raises `ValueError` when
+          the resulting slug is empty.
+        src/__init__.py: ""
+        src/slug.py: |
+          """ASCII URL slug helper."""
+
+          from __future__ import annotations
+
+          import re
+
+          _NON_ALNUM_RE = re.compile(r"[^a-z0-9]+")
+
+
+          def slugify(text: str) -> str:
+              """Convert text to a lowercase hyphen-separated ASCII slug."""
+              slug = _NON_ALNUM_RE.sub("-", text.lower()).strip("-")
+              if not slug:
+                  raise ValueError("input must contain at least one ASCII alphanumeric character")
+              return slug
+        tests/__init__.py: ""
+        tests/test_slug.py: |
+          import unittest
+
+          from src.slug import slugify
+
+
+          class SlugifyTests(unittest.TestCase):
+              def test_basic_title(self) -> None:
+                  self.assertEqual(slugify("Hello World"), "hello-world")
+
+
+          if __name__ == "__main__":
+              unittest.main()
+    assertions:
+      files_must_exist:
+        - tests/test_slug.py
+      files_must_change:
+        - tests/test_slug.py
+      files_must_not_change:
+        - src/slug.py
+        - AGENTS.md
+        - okf/features/slug.md
+      max_changed_files: 2
+      file_contains:
+        - path: tests/test_slug.py
+          pattern: "assertRaises\\(ValueError\\)"
+      commands:
+        - name: unit-tests
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+        - name: minimum-test-count
+          cmd:
+            - "{python}"
+            - "-c"
+            - >-
+              import ast, pathlib;
+              tree = ast.parse(pathlib.Path("tests/test_slug.py").read_text(encoding="utf-8"));
+              methods = [n.name for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name.startswith("test_")];
+              assert len(methods) >= 3, f"expected at least 3 test methods, found {methods}"
+          expect_exit_code: 0
+      response_contains:
+        - name: reports-test-file
+          pattern: "(tests/test_slug\\.py|test_slug)"
+
+  - id: refactor-safely-email-normalization
+    skill: refactor-safely
+    title: Extract duplicated email validation helper without changing behavior
+    description: >-
+      Verify that Codex extracts duplicated validation logic into a private
+      helper while preserving public signatures, error messages, baseline tests,
+      and OKF documentation untouched.
+    prompt: >-
+      Use the refactor-safely skill in .agents/skills/refactor-safely/SKILL.md.
+      Read AGENTS.md, okf/index.md, okf/architecture/validation.md, src/validators.py,
+      and tests/test_validators.py first.
+      Refactor src/validators.py to extract the duplicated email normalization
+      and validation logic into a private helper function (starting with `_`).
+      Preserve the public function names, return values, and ValueError messages.
+      Do not modify tests/test_validators.py, AGENTS.md, or any files under okf/.
+      Run the test suite to verify behavior is unchanged.
+    workspace:
+      copy_skills:
+        - refactor-safely
+      files:
+        AGENTS.md: |
+          # Project Instructions
+
+          - Run unit tests with `python3 -m unittest discover -s tests -v`.
+          - Preserve public APIs and error messages during refactors.
+        okf/index.md: |
+          ---
+          okf_version: "0.2"
+          ---
+
+          # Validation Knowledge Bundle
+
+          - [Validation Architecture](architecture/validation.md) - Public validator entry points.
+        okf/log.md: |
+          # OKF Update Log
+
+          ## 2026-08-01
+
+          - **Initialization**: Documented public email validator functions.
+        okf/architecture/validation.md: |
+          ---
+          type: Architecture
+          title: Email Validators
+          description: Public entry points for primary and backup email normalization.
+          tags: [architecture, validation]
+          ---
+
+          # Public Contract
+
+          - `validate_primary_email(raw: str) -> str`
+          - `validate_backup_email(raw: str) -> str`
+          Both return trimmed lowercase email addresses and raise `ValueError` on invalid input.
+        src/__init__.py: ""
+        src/validators.py: |
+          """Public email validation helpers."""
+
+          from __future__ import annotations
+
+
+          def validate_primary_email(raw: str) -> str:
+              """Normalize and validate a primary account email."""
+              cleaned = raw.strip().lower()
+              if not cleaned:
+                  raise ValueError("email must not be empty")
+              if cleaned.count("@") != 1:
+                  raise ValueError("email must contain a single @")
+              local, domain = cleaned.split("@", 1)
+              if not local or "." not in domain or domain.startswith(".") or domain.endswith("."):
+                  raise ValueError("email domain is invalid")
+              return cleaned
+
+
+          def validate_backup_email(raw: str) -> str:
+              """Normalize and validate a backup recovery email."""
+              cleaned = raw.strip().lower()
+              if not cleaned:
+                  raise ValueError("email must not be empty")
+              if cleaned.count("@") != 1:
+                  raise ValueError("email must contain a single @")
+              local, domain = cleaned.split("@", 1)
+              if not local or "." not in domain or domain.startswith(".") or domain.endswith("."):
+                  raise ValueError("email domain is invalid")
+              return cleaned
+        tests/__init__.py: ""
+        tests/test_validators.py: |
+          import unittest
+
+          from src.validators import validate_backup_email, validate_primary_email
+
+
+          class ValidatorTests(unittest.TestCase):
+              def test_normalizes_valid_emails(self) -> None:
+                  self.assertEqual(validate_primary_email("  Alice@Example.COM "), "alice@example.com")
+                  self.assertEqual(validate_backup_email("  Bob@Example.ORG "), "bob@example.org")
+
+              def test_rejects_empty_email(self) -> None:
+                  for fn in (validate_primary_email, validate_backup_email):
+                      with self.assertRaisesRegex(ValueError, "email must not be empty"):
+                          fn("   ")
+
+              def test_rejects_missing_or_extra_at(self) -> None:
+                  for fn in (validate_primary_email, validate_backup_email):
+                      with self.assertRaisesRegex(ValueError, "email must contain a single @"):
+                          fn("alice.example.com")
+                      with self.assertRaisesRegex(ValueError, "email must contain a single @"):
+                          fn("a@b@example.com")
+
+              def test_rejects_invalid_domain(self) -> None:
+                  for fn in (validate_primary_email, validate_backup_email):
+                      with self.assertRaisesRegex(ValueError, "email domain is invalid"):
+                          fn("alice@localhost")
+                      with self.assertRaisesRegex(ValueError, "email domain is invalid"):
+                          fn("alice@.example.com")
+
+
+          if __name__ == "__main__":
+              unittest.main()
+    assertions:
+      files_must_exist:
+        - src/validators.py
+      files_must_change:
+        - src/validators.py
+      files_must_not_change:
+        - tests/test_validators.py
+        - AGENTS.md
+        - okf/architecture/validation.md
+        - okf/log.md
+      max_changed_files: 2
+      file_contains:
+        - path: src/validators.py
+          pattern: "def validate_primary_email"
+        - path: src/validators.py
+          pattern: "def validate_backup_email"
+        - path: src/validators.py
+          pattern: "(?m)^def _[a-zA-Z0-9_]+\\("
+      commands:
+        - name: baseline-tests-pass
+          cmd: ["{python}", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          expect_exit_code: 0
+      response_contains:
+        - name: mentions-validation
+          pattern: "(?i)(test|unittest)"
+
+  - id: update-okf-retry-policy-diff
+    skill: update-okf
+    title: Update OKF docs and log from an implementation git diff
+    description: >-
+      Verify that Codex inspects an unstaged git diff in the workspace and
+      updates durable OKF documentation and okf/log.md without modifying
+      production code or breaking OKF v0.2 metadata rules.
+    prompt: >-
+      Use the update-okf skill in .agents/skills/update-okf/SKILL.md.
+      Read okf/index.md, okf/log.md, and okf/features/http-client.md, then
+      inspect `git diff` in this workspace.
+      Update okf/features/http-client.md and add a dated YYYY-MM-DD entry to
+      okf/log.md so the OKF bundle accurately reflects the new retry policy in
+      src/http_client.py. Do not modify src/http_client.py or AGENTS.md.
+    workspace:
+      copy_skills:
+        - update-okf
+      files:
+        AGENTS.md: |
+          # Project Instructions
+
+          - Keep durable project knowledge in `okf/`.
+          - Follow OKF v0.2 metadata conventions and keep `okf/log.md` dated as `YYYY-MM-DD`.
+        okf/index.md: |
+          ---
+          okf_version: "0.2"
+          ---
+
+          # HTTP Client Knowledge Bundle
+
+          - [HTTP Retry Policy](features/http-client.md) - Outbound retry behavior.
+        okf/log.md: |
+          # OKF Update Log
+
+          ## 2026-08-01
+
+          - **Initialization**: Documented initial linear retry policy.
+        okf/features/http-client.md: |
+          ---
+          type: Feature
+          title: HTTP Retry Policy
+          description: Controls retry count and backoff timing for outbound HTTP requests.
+          tags: [http, reliability]
+          ---
+
+          # Behavior
+
+          Outbound HTTP requests retry up to `3` times using linear backoff (`base_delay * attempt`).
+        src/__init__.py: ""
+        src/http_client.py: |
+          """Minimal HTTP retry backoff helper."""
+
+          from __future__ import annotations
+
+          MAX_RETRIES = 3
+
+
+          def retry_delay(attempt: int, base_delay: float = 0.5) -> float:
+              """Compute linear retry delay in seconds."""
+              if attempt < 1 or attempt > MAX_RETRIES:
+                  raise ValueError("attempt out of range")
+              return base_delay * attempt
+      working_tree_files:
+        src/http_client.py: |
+          """Minimal HTTP retry backoff helper."""
+
+          from __future__ import annotations
+
+          MAX_RETRIES = 5
+
+
+          def retry_delay(attempt: int, base_delay: float = 0.5) -> float:
+              """Compute exponential retry delay in seconds."""
+              if attempt < 1 or attempt > MAX_RETRIES:
+                  raise ValueError("attempt out of range")
+              return base_delay * (2 ** (attempt - 1))
+    assertions:
+      files_must_exist:
+        - okf/features/http-client.md
+        - okf/log.md
+      files_must_change:
+        - okf/features/http-client.md
+        - okf/log.md
+      files_must_not_change:
+        - src/http_client.py
+        - AGENTS.md
+      max_changed_files: 3
+      file_contains:
+        - path: okf/features/http-client.md
+          pattern: "\\b5\\b"
+        - path: okf/features/http-client.md
+          pattern: "(?i)exponential"
+      commands:
+        - name: okf-validation
+          cmd: ["{python}", "{repo_root}/scripts/validate_okf.py", "{workspace}/okf"]
+          expect_exit_code: 0
+      response_contains:
+        - name: mentions-okf-files
+          pattern: "okf/features/http-client\\.md"
