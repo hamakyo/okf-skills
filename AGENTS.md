@@ -23,7 +23,7 @@ This repository is a public template collection for Codex and Claude Code users 
 - Read `okf/log.md` when history is relevant or before editing OKF, not for every task.
 - Reserved files are `index.md` and `log.md`.
 - Non-reserved OKF Markdown concept files must include YAML frontmatter with a non-empty `type`.
-- Follow OKF v0.2 metadata semantics and the repository's software-project profile.
+- Follow OKF v0.3 metadata semantics and the repository's software-project profile.
 - When changing OKF structure, confirm that `okf/index.md` and `okf/log.md` still describe the bundle accurately.
 
 ## Editing Rules

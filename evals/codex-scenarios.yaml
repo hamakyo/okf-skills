@@ -32,7 +32,7 @@ scenarios:
           - Update `okf/` and `okf/log.md` when user-visible behavior changes.
         okf/index.md: |
           ---
-          okf_version: "0.2"
+          okf_version: "0.3"
           ---
 
           # Exporter Knowledge Bundle
@@ -159,7 +159,7 @@ scenarios:
           - When asked to investigate first, report reproduction and root cause before modifying files.
         okf/index.md: |
           ---
-          okf_version: "0.2"
+          okf_version: "0.3"
           ---
 
           # Pricing Knowledge Bundle
@@ -258,7 +258,7 @@ scenarios:
           - Use Python's built-in `unittest` module.
         okf/index.md: |
           ---
-          okf_version: "0.2"
+          okf_version: "0.3"
           ---
 
           # Slugify Knowledge Bundle
@@ -372,7 +372,7 @@ scenarios:
           - Preserve public APIs and error messages during refactors.
         okf/index.md: |
           ---
-          okf_version: "0.2"
+          okf_version: "0.3"
           ---
 
           # Validation Knowledge Bundle
@@ -494,7 +494,7 @@ scenarios:
     description: >-
       Verify that Codex inspects an unstaged git diff in the workspace and
       updates durable OKF documentation and okf/log.md without modifying
-      production code or breaking OKF v0.2 metadata rules.
+      production code or breaking OKF v0.3 metadata rules.
     prompt: >-
       Use the update-okf skill in .agents/skills/update-okf/SKILL.md.
       Read okf/index.md, okf/log.md, and okf/features/http-client.md, then
@@ -510,10 +510,10 @@ scenarios:
           # Project Instructions
 
           - Keep durable project knowledge in `okf/`.
-          - Follow OKF v0.2 metadata conventions and keep `okf/log.md` dated as `YYYY-MM-DD`.
+          - Follow OKF v0.3 metadata conventions and keep `okf/log.md` dated as `YYYY-MM-DD`.
         okf/index.md: |
           ---
-          okf_version: "0.2"
+          okf_version: "0.3"
           ---
 
           # HTTP Client Knowledge Bundle

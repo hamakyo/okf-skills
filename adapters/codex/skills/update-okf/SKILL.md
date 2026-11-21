@@ -28,7 +28,7 @@ Do not use this Skill for:
 - Relevant issue, PR, or user request.
 - Existing OKF bundle.
 - Date for `okf/log.md` entry.
-- Current producer actor in OKF form when known, such as `tool/version`, `human:<id>`, or `process:<id>`.
+- Current producer actor in OKF form when known, such as `<producer>/<version>` or `<scheme>:<id>` (`human:<id>`, `team:<id>`, `process:<id>`).
 
 ## Required context
 
@@ -53,13 +53,13 @@ Before editing OKF, read:
 4. Add or update YAML frontmatter for non-reserved concept documents:
    - Keep `type` non-empty.
    - Add or update `sources` when identifiable source material changed.
-   - When `generated` exists and content meaningfully changes, update `generated.by` and `generated.at` for the current producer.
+   - When `generated` exists and content meaningfully changes, update `generated.by` and `generated.at` for the current producer (using an RFC 3339 offset-aware `date-time` or `YYYY-MM-DD` `full-date`).
    - Add `generated` when the producer is known and can be represented without guessing.
-   - Remove or replace `verified` events after meaningful content changes unless the new content was verified again.
-   - Set `status` only when `draft` or `deprecated` conveys useful lifecycle information; omission means `stable`.
+   - Do not treat verification events older than `generated.at` as verification of meaningfully changed content; remove stale `verified` events or record a fresh verification event with `verified[].at >= generated.at`.
+   - Set `status` only when `draft` or `deprecated` conveys useful lifecycle information; omission means `stable`. When deprecating a concept with a replacement, set `superseded_by` to the replacement concept path.
    - Set `stale_after` only when an absolute validity horizon is known.
-   - Do not add the legacy `timestamp` field.
-5. Keep `okf/index.md` accurate when adding, moving, or removing OKF documents.
+   - Preserve unknown metadata keys and `x-` producer extensions; do not add the legacy `timestamp` field.
+5. Keep `okf/index.md` (including its bundle-root frontmatter such as `okf_version`, `title`, `description`, or `license`) accurate when adding, moving, or removing OKF documents.
 6. Add a dated entry to `okf/log.md` using `YYYY-MM-DD`.
 7. Avoid copying large code blocks unless they are the best durable reference.
 8. Verify Markdown links and YAML metadata.

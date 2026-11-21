@@ -1,20 +1,19 @@
-# OKF v0.2 In This Repository
+# OKF v0.3 In This Repository
 
 OKF is the project knowledge layer. Skills are the work procedures. Keeping those responsibilities separate makes the repository easier for both humans and agents to maintain.
 
 ## Upstream Standard
 
-This repository targets [Open Knowledge Format v0.2](https://github.com/GoogleCloudPlatform/open-knowledge-format/blob/main/SPEC.md). An OKF bundle is a directory tree of Markdown files. `index.md` and `log.md` are reserved filenames; every other Markdown file is a concept document with YAML frontmatter.
+This repository targets [Open Knowledge Format v0.3](https://github.com/open-knowledge-format/open-knowledge-format/blob/main/SPEC.md). An OKF bundle is a directory tree of Markdown files. `index.md` and `log.md` are reserved filenames, dot-files and dot-directories are excluded from traversal, and non-reserved Markdown files with YAML frontmatter declaring a non-empty `type` are concept documents.
 
 The upstream standard is intentionally minimal:
 
-- Every concept document has parseable YAML frontmatter.
-- `type` is the only universally required concept field.
-- A bundle-root `index.md` may declare `okf_version: "0.2"`.
-- Producers may add unknown metadata, and consumers should preserve it.
+- Every concept document has parseable YAML frontmatter with a non-empty `type` (Markdown files without frontmatter or `type` are treated as non-concepts by upstream consumers).
+- A bundle-root `index.md` may declare bundle metadata in YAML frontmatter: `okf_version: "0.3"`, `title`, `description`, `license`, and extension keys (§8.1).
+- Producers may add unknown metadata—and `x-` prefixed keys are reserved for producer extensions at all levels (§4.1)—which consumers must preserve.
 - Broken links or missing optional metadata do not make an upstream bundle invalid.
 
-This repository applies additional software-project conventions. Those choices are documented separately in the [Software Project Profile](okf-software-project-profile.md).
+The upstream repository also ships general-purpose `okf-generate` and `okf-consume` Skills. This repository complements them with reusable software-maintenance workflow Skills and additional software-project conventions documented in the [Software Project Profile](okf-software-project-profile.md).
 
 ## OKF Answers "What Is True?"
 
@@ -68,7 +67,12 @@ Core fields:
 
 ## Provenance, Trust, And Lifecycle
 
-OKF v0.2 defines optional metadata families. Their absence is valid and meaningful; do not add placeholder values.
+OKF v0.3 defines optional metadata families. Their absence is valid and meaningful; do not add placeholder values.
+
+### Timestamps And Actors
+
+- **Timestamps (§5):** Timestamp-valued fields (`sources[].last_modified`, `usage_window.from`/`to`, `generated.at`, `verified[].at`, `stale_after`) accept either an RFC 3339 `date-time` with an explicit UTC offset (for example, `2026-08-21T09:00:00Z`) or an RFC 3339 `full-date` (`YYYY-MM-DD`, interpreted as `00:00:00Z`). Offsetless datetimes such as `2026-08-21T09:00:00` are invalid.
+- **Actors (§7):** Actor fields (`sources[].author`, `generated.by`, `verified[].by`) use either `<producer>/<version>` or `<scheme>:<id>` (such as `human:<id>`, `team:<id>`, `process:<id>`, or a custom lowercase scheme). For trust tiers, only `human:` yields `human-reviewed`; `team:` and other non-human actors yield `machine-confirmed`.
 
 ### `sources`
 
@@ -79,15 +83,13 @@ sources:
   - id: account-policy
     resource: ../references/account-policy.md
     title: Account policy
-    last_modified: 2026-05-30T00:00:00Z
+    last_modified: 2026-05-30
 usage_window: { from: 2026-06-01T00:00:00Z, to: 2026-06-30T00:00:00Z }
 ```
 
-OKF v0.2 defines timestamp-valued fields, including `last_modified` and `usage_window` endpoints, as ISO 8601 datetimes with an explicit UTC offset.
-
 ### `generated`
 
-Use `generated` to identify who or what produced the current content. `generated.by` follows the OKF actor convention (`tool/version`, `human:<id>`, `process:<id>`, or `team:<id>` as used in upstream v0.2 examples), and `generated.at` records the last meaningful content change with an explicit UTC offset.
+Use `generated` to identify who or what produced the current content. `generated.by` identifies the producing actor, and `generated.at` records the last meaningful content change.
 
 ```yaml
 generated:
@@ -95,11 +97,11 @@ generated:
   at: 2026-08-21T09:00:00Z
 ```
 
-The legacy `timestamp` field is superseded by `generated.at`. Do not add `timestamp` to v0.2 concept documents.
+The legacy `timestamp` field is superseded by `generated.at`. Do not add `timestamp` to v0.3 concept documents.
 
 ### `verified`
 
-Use `verified` only when an actor has checked the current content against its sources or resource. A verification performed before a meaningful content change must not be presented as verification of the new content.
+Use `verified` only when an actor has checked the current content against its sources or resource. Under OKF v0.3 (§5.3), only **current** verification events—those with `verified[].at >= generated.at`, or any event when `generated` is absent—count toward trust tier. Older events may remain as historical records, or be removed when superseded, but a verification performed before a meaningful content change must never be presented as verification of the new content.
 
 ```yaml
 verified:
@@ -107,13 +109,20 @@ verified:
     at: 2026-08-21T10:00:00Z
 ```
 
-### `status`
+### `status` And `superseded_by`
 
 Use `status: draft` for incomplete or unreviewed knowledge and `status: deprecated` for retained historical knowledge that is no longer current. Omitted `status` means `stable`.
 
+When deprecating a concept that has a replacement, OKF v0.3 (§5.4) allows `superseded_by` with the relative path to the replacement concept:
+
+```yaml
+status: deprecated
+superseded_by: features/account-deletion-v2.md
+```
+
 ### `stale_after`
 
-Use `stale_after` only when a concept has a known absolute expiry instant. It is an offset-aware datetime, not a date or relative time-to-live.
+Use `stale_after` only when a concept has a known absolute validity horizon (RFC 3339 offset-aware `date-time` or `YYYY-MM-DD` `full-date`, not a relative time-to-live).
 
 ```yaml
 stale_after: 2026-12-31T00:00:00Z
@@ -121,7 +130,7 @@ stale_after: 2026-12-31T00:00:00Z
 
 ### Attested Computations (Out Of Scope For This Profile)
 
-OKF v0.2 (§10) also defines Attested Computation concepts (`# Computation`, `computations/`, `references/`, and metadata fields such as `runtime`, `parameters`, `executor`, and `attester`). This software-project template does not scaffold or enforce Attested Computation contracts; following OKF v0.2 forward-compatibility rules, `scripts/validate_okf.py` tolerates unknown metadata keys so bundles that include computation metadata remain valid.
+OKF v0.3 (§10) also defines Attested Computation concepts (`# Computation`, `computations/`, `references/`, and metadata fields such as `runtime`, `parameters`, `executor`, and `attester`). This software-project template does not scaffold or enforce Attested Computation contracts; following OKF v0.3 forward-compatibility rules, `scripts/validate_okf.py` tolerates unknown metadata keys and `x-` producer extensions so bundles that include computation metadata remain valid.
 
 ## Linking
 

@@ -10,7 +10,7 @@
   English | <a href="README.ja.md">日本語</a>
 </p>
 
-Reusable Skills and an opinionated OKF v0.2 software-project profile for Codex, Claude Code, and agent-assisted software projects.
+Reusable Skills and an opinionated OKF v0.3 software-project profile for Codex, Claude Code, and agent-assisted software projects.
 
 ## What This Solves
 
@@ -28,7 +28,7 @@ This repository provides a small, portable reference profile:
 
 ### OKF
 
-OKF, or Open Knowledge Format, is the project knowledge layer. This repository targets OKF v0.2 and adds an opinionated software-project profile for architecture, domain, data, feature, and playbook knowledge. The directory categories are profile conventions, not OKF core requirements.
+OKF, or Open Knowledge Format, is the project knowledge layer. This repository targets OKF v0.3 and adds an opinionated software-project profile for architecture, domain, data, feature, and playbook knowledge. The directory categories are profile conventions, not OKF core requirements.
 
 OKF answers: "What is true about this project?"
 
@@ -181,7 +181,7 @@ Use OKF for stable project knowledge, not task instructions. A useful OKF docume
 - Links to related OKF documents when relevant.
 - Concrete details that help an agent avoid guessing.
 - Frontmatter `sources` entries (and optional Markdown footnotes keyed by `id`) for claims that came from external material.
-- Optional v0.2 provenance, trust, and lifecycle metadata only when the values are known.
+- Optional v0.3 provenance, trust, and lifecycle metadata only when the values are known.
 
 Example:
 
@@ -202,7 +202,7 @@ The export includes the same rows currently visible after filters are applied.
 - Reporting overview: `okf/domain/reporting.md`
 ```
 
-See [OKF v0.2](docs/okf.md) for the upstream model and the [Software Project Profile](docs/okf-software-project-profile.md) for this repository's additional conventions.
+See [OKF v0.3](docs/okf.md) for the upstream model and the [Software Project Profile](docs/okf-software-project-profile.md) for this repository's additional conventions.
 
 ## Add This To Your Own Repo
 

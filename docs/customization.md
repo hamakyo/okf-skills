@@ -23,7 +23,7 @@ okf/playbooks/release.md
 
 Remove categories you do not use.
 
-The category layout is the repository's [Software Project Profile](okf-software-project-profile.md), not a core OKF requirement. Keep `okf_version: "0.2"` in the bundle-root index and keep non-reserved concept documents conformant with [OKF v0.2](okf.md).
+The category layout is the repository's [Software Project Profile](okf-software-project-profile.md), not a core OKF requirement. Keep `okf_version: "0.3"` in the bundle-root index and keep non-reserved concept documents conformant with [OKF v0.3](okf.md).
 
 ## Customizing Skills
 
