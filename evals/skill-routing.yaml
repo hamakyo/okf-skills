@@ -1,56 +1,227 @@
+schema_version: 1
 cases:
+  # ---------------------------------------------------------------------------
+  # Positive cases (3 per core Skill)
+  # ---------------------------------------------------------------------------
   - id: implement-feature-positive
     category: positive
     prompt: Add CSV export support to the reports page.
     expect: implement-feature
     reject: [investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: New user-facing capability requires feature implementation.
+
+  - id: implement-feature-webhook-retry
+    category: positive
+    prompt: Add exponential backoff retries when outbound webhook delivery returns HTTP 5xx.
+    expect: implement-feature
+    reject: [investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: Extending integration behavior with a new retry policy is feature work.
+
+  - id: implement-feature-cli-filter
+    category: positive
+    prompt: Add a --status filter flag to the list command so users can show only active items.
+    expect: implement-feature
+    reject: [investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: Adding a new CLI option changes user-visible behavior.
+
   - id: investigate-bug-positive
     category: positive
     prompt: Find out why login fails only in production before changing code.
     expect: investigate-bug
     reject: [implement-feature, add-test, refactor-safely, update-okf]
+    rationale: Unknown root cause requires reproduction and diagnosis first.
+
+  - id: investigate-bug-flaky-ci
+    category: positive
+    prompt: Triage why the integration suite intermittently times out on Ubuntu runners.
+    expect: investigate-bug
+    reject: [implement-feature, add-test, refactor-safely, update-okf]
+    rationale: Intermittent CI failure with unknown cause needs bug investigation.
+
+  - id: investigate-bug-memory-growth
+    category: positive
+    prompt: Diagnose why worker RSS memory grows steadily after running for two hours.
+    expect: investigate-bug
+    reject: [implement-feature, add-test, refactor-safely, update-okf]
+    rationale: Unexplained runtime defect calls for investigation before proposing a fix.
+
   - id: add-test-positive
     category: positive
     prompt: Add boundary-value tests for the existing parser behavior.
     expect: add-test
     reject: [implement-feature, investigate-bug, refactor-safely, update-okf]
+    rationale: Adding edge-case tests for already-defined behavior fits add-test.
+
+  - id: add-test-error-paths
+    category: positive
+    prompt: Cover the 429 and malformed-header error paths of the existing rate limiter with unit tests.
+    expect: add-test
+    reject: [implement-feature, investigate-bug, refactor-safely, update-okf]
+    rationale: Expanding error-path coverage for existing behavior without code changes.
+
+  - id: add-test-contract-coverage
+    category: positive
+    prompt: Add unit tests confirming the existing serializer preserves UTC offsets and escapes pipe characters.
+    expect: add-test
+    reject: [implement-feature, investigate-bug, refactor-safely, update-okf]
+    rationale: Closing coverage gaps on current documented behavior is test-only work.
+
   - id: refactor-safely-positive
     category: positive
     prompt: Remove duplication from this module without changing behavior.
     expect: refactor-safely
     reject: [implement-feature, investigate-bug, add-test, update-okf]
+    rationale: Behavior-preserving deduplication belongs to refactor-safely.
+
+  - id: refactor-safely-split-module
+    category: positive
+    prompt: Split the 600-line order handler into smaller internal helpers while keeping every HTTP response identical.
+    expect: refactor-safely
+    reject: [implement-feature, investigate-bug, add-test, update-okf]
+    rationale: Structural cleanup with strict preservation of external behavior.
+
+  - id: refactor-safely-simplify-branching
+    category: positive
+    prompt: Flatten the nested conditionals in validation_utils.py for readability without altering any return value or error message.
+    expect: refactor-safely
+    reject: [implement-feature, investigate-bug, add-test, update-okf]
+    rationale: Pure readability improvement with unchanged contracts.
+
   - id: update-okf-positive
     category: positive
     prompt: Update project knowledge after the merged schema and workflow changes.
     expect: update-okf
     reject: [implement-feature, investigate-bug, add-test, refactor-safely]
+    rationale: Syncing durable OKF documents after completed implementation changes.
+
+  - id: update-okf-from-git-diff
+    category: positive
+    prompt: Inspect the recent git diff and update the affected okf/ feature, data, and log documents.
+    expect: update-okf
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely]
+    rationale: Post-change OKF synchronization driven directly by git diff.
+
+  - id: update-okf-operational-playbook
+    category: positive
+    prompt: Record our newly finalized database failover procedure in the OKF playbooks and index.
+    expect: update-okf
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely]
+    rationale: Capturing a durable operational playbook belongs to update-okf.
+
+  # ---------------------------------------------------------------------------
+  # Overlap / ambiguous cases (2 per core Skill as expect; distinguish neighbors)
+  # ---------------------------------------------------------------------------
   - id: bug-versus-feature
     category: overlap
     prompt: Users report an unexplained checkout regression; reproduce it and identify the cause first.
     expect: investigate-bug
     reject: [implement-feature]
+    rationale: Cause is unknown, so investigation must precede feature/fix implementation.
+
+  - id: known-fix-versus-investigation
+    category: overlap
+    prompt: We already confirmed the invoice date bug is caused by missing UTC conversion in format_date(); implement the approved fix.
+    expect: implement-feature
+    reject: [investigate-bug]
+    rationale: Root cause and approved fix are already known, so investigation is not needed.
+
   - id: behavior-change-versus-refactor
     category: overlap
     prompt: Change the parser output format to include source locations.
     expect: implement-feature
     reject: [refactor-safely]
-  - id: tests-versus-bug-fix
-    category: overlap
-    prompt: Add regression coverage for the already-corrected null-input behavior without changing production code.
-    expect: add-test
-    reject: [investigate-bug, implement-feature]
+    rationale: Changing output contracts is a behavior change, not a behavior-preserving refactor.
+
   - id: refactor-versus-feature
     category: overlap
     prompt: Extract helpers while preserving every public API and serialized value.
     expect: refactor-safely
     reject: [implement-feature]
+    rationale: External behavior and contracts remain unchanged.
+
+  - id: refactor-versus-add-test
+    category: overlap
+    prompt: Clean up duplicated SQL query builders using the existing test suite as a safety net without changing behavior.
+    expect: refactor-safely
+    reject: [add-test, implement-feature]
+    rationale: Primary goal is structural refactoring; existing tests are only used for verification.
+
+  - id: tests-versus-bug-fix
+    category: overlap
+    prompt: Add regression coverage for the already-corrected null-input behavior without changing production code.
+    expect: add-test
+    reject: [investigate-bug, implement-feature]
+    rationale: Production fix is done; only regression test coverage is requested.
+
+  - id: failing-test-triage-versus-add-test
+    category: overlap
+    prompt: The nightly test suite started failing on timezone parsing after yesterday's merge; find out why it broke before editing tests.
+    expect: investigate-bug
+    reject: [add-test, implement-feature]
+    rationale: Unclear failure in an existing test requires root-cause investigation first.
+
+  - id: safety-tests-before-refactor-versus-refactor
+    category: overlap
+    prompt: Before we refactor the legacy exporter next week, add characterization tests that lock in its current outputs without touching production code.
+    expect: add-test
+    reject: [refactor-safely, implement-feature]
+    rationale: Request asks only for pre-refactor safety tests, not the refactor itself.
+
   - id: knowledge-versus-doc-copyedit
     category: overlap
     prompt: Record the durable architecture boundary introduced by the completed implementation.
     expect: update-okf
     reject: [implement-feature]
+    rationale: Implementation is complete; recording durable architecture truth belongs to update-okf.
+
+  - id: okf-update-versus-refactor
+    category: overlap
+    prompt: After reorganizing the payment modules last sprint, update the OKF architecture docs and index to reflect the new ownership boundaries.
+    expect: update-okf
+    reject: [refactor-safely, implement-feature]
+    rationale: The code refactor already happened; the remaining work is updating OKF knowledge.
+
+  # ---------------------------------------------------------------------------
+  # Negative cases (expect: null; no core Skill should be selected)
+  # ---------------------------------------------------------------------------
   - id: general-documentation-negative
     category: negative
     prompt: Fix spelling and punctuation in README without changing instructions or project knowledge.
     expect: null
     reject: [implement-feature, investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: Pure copyedit has no code, test, or durable OKF knowledge impact.
+
+  - id: codebase-explanation-negative
+    category: negative
+    prompt: Explain how the authentication middleware validates session tokens without modifying any files.
+    expect: null
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: Read-only explanation does not trigger a modification or bug-triage workflow.
+
+  - id: read-only-research-negative
+    category: negative
+    prompt: Compare Redis, Memcached, and in-process LRU caching tradeoffs for our workload without changing the repository.
+    expect: null
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: Pure research and comparison should not invoke implementation or OKF update Skills.
+
+  - id: temporary-scratch-note-negative
+    category: negative
+    prompt: Draft a one-off agenda and scratch checklist for tomorrow's standup meeting.
+    expect: null
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: Temporary task notes must not be written to OKF or treated as code work.
+
+  - id: git-history-summary-negative
+    category: negative
+    prompt: Summarize the last ten commits on the main branch.
+    expect: null
+    reject: [implement-feature, investigate-bug, add-test, refactor-safely, update-okf]
+    rationale: Read-only git history lookup needs no Skill.
+
+  - id: undefined-behavior-test-negative
+    category: negative
+    prompt: Write tests for the planned enterprise billing tier rules that have not been defined or implemented yet.
+    expect: null
+    reject: [add-test, implement-feature, investigate-bug, refactor-safely, update-okf]
+    rationale: Behavior is undefined, so neither add-test nor implement-feature should run before requirements are clarified.
